@@ -1,0 +1,269 @@
+[
+  {
+    "id": "a1-easy-mc-1",
+    "level": "A1",
+    "difficulty": "easy",
+    "type": "multiple-choice",
+    "prompt": "What color is the sky on a sunny day?",
+    "options": ["Blue", "Red", "Green"],
+    "answer": "Blue"
+  },
+  {
+    "id": "a1-easy-fb-1",
+    "level": "A1",
+    "difficulty": "easy",
+    "type": "fill-blank",
+    "prompt": "The cat ___ on the mat.",
+    "answer": "is"
+  },
+  {
+    "id": "a1-easy-match-1",
+    "level": "A1",
+    "difficulty": "easy",
+    "type": "matching",
+    "prompt": "Match each animal with its emoji.",
+    "pairs": [
+      {
+        "left": "Dog",
+        "right": "🐶"
+      },
+      {
+        "left": "Cat",
+        "right": "🐱"
+      },
+      {
+        "left": "Bird",
+        "right": "🐦"
+      }
+    ]
+  },
+  {
+    "id": "a1-easy-match-2",
+    "level": "A1",
+    "difficulty": "easy",
+    "type": "matching",
+    "prompt": "Match the number with its word.",
+    "pairs": [
+      {
+        "left": "1",
+        "right": "One"
+      },
+      {
+        "left": "2",
+        "right": "Two"
+      },
+      {
+        "left": "3",
+        "right": "Three"
+      },
+      {
+        "left": "4",
+        "right": "Four"
+      }
+    ]
+  },
+  {
+    "id": "a1-easy-match-3",
+    "level": "A1",
+    "difficulty": "easy",
+    "type": "matching",
+    "prompt": "Match each color with its square.",
+    "pairs": [
+      {
+        "left": "Red",
+        "right": "🟥"
+      },
+      {
+        "left": "Blue",
+        "right": "🟦"
+      },
+      {
+        "left": "Yellow",
+        "right": "🟨"
+      },
+      {
+        "left": "Green",
+        "right": "🟩"
+      }
+    ]
+  },
+  {
+    "id": "a1-easy-wo-1",
+    "level": "A1",
+    "difficulty": "easy",
+    "type": "word-order",
+    "prompt": "Put the words in order.",
+    "words": ["is", "This", "cat", "a"],
+    "answer": "This is a cat"
+  },
+  {
+    "id": "a1-easy-fb-2",
+    "level": "A1",
+    "difficulty": "easy",
+    "type": "fill-blank",
+    "prompt": "I have two ___ (dog).",
+    "answer": "dogs"
+  },
+  {
+    "id": "a1-medium-mc-1",
+    "level": "A1",
+    "difficulty": "medium",
+    "type": "multiple-choice",
+    "prompt": "Choose the correct greeting for the morning.",
+    "options": ["Good night", "Good morning", "Good evening"],
+    "answer": "Good morning"
+  },
+  {
+    "id": "a1-medium-fb-1",
+    "level": "A1",
+    "difficulty": "medium",
+    "type": "fill-blank",
+    "prompt": "I ___ seven years old.",
+    "answer": "am"
+  },
+  {
+    "id": "a1-medium-match-1",
+    "level": "A1",
+    "difficulty": "medium",
+    "type": "matching",
+    "prompt": "Match the color with its square.",
+    "pairs": [
+      {
+        "left": "Purple",
+        "right": "🟪"
+      },
+      {
+        "left": "Orange",
+        "right": "🟧"
+      },
+      {
+        "left": "Black",
+        "right": "⬛"
+      },
+      {
+        "left": "White",
+        "right": "⬜"
+      }
+    ]
+  },
+  {
+    "id": "a1-medium-match-2",
+    "level": "A1",
+    "difficulty": "medium",
+    "type": "matching",
+    "prompt": "Match each weather word with its emoji.",
+    "pairs": [
+      {
+        "left": "Sunny",
+        "right": "☀️"
+      },
+      {
+        "left": "Rainy",
+        "right": "🌧️"
+      },
+      {
+        "left": "Cloudy",
+        "right": "☁️"
+      },
+      {
+        "left": "Snowy",
+        "right": "❄️"
+      }
+    ]
+  },
+  {
+    "id": "a1-medium-wo-1",
+    "level": "A1",
+    "difficulty": "medium",
+    "type": "word-order",
+    "prompt": "Put the words in order.",
+    "words": ["like", "I", "apples"],
+    "answer": "I like apples"
+  },
+  {
+    "id": "a1-medium-mc-2",
+    "level": "A1",
+    "difficulty": "medium",
+    "type": "multiple-choice",
+    "prompt": "Choose the correct plural form of 'child'.",
+    "options": ["childs", "children", "childes"],
+    "answer": "children"
+  },
+  {
+    "id": "a1-medium-wo-2",
+    "level": "A1",
+    "difficulty": "medium",
+    "type": "word-order",
+    "prompt": "Put the words in order.",
+    "words": ["She", "has", "a", "dog"],
+    "answer": "She has a dog"
+  },
+  {
+    "id": "a1-hard-mc-1",
+    "level": "A1",
+    "difficulty": "hard",
+    "type": "multiple-choice",
+    "prompt": "Which word means the opposite of 'big'?",
+    "options": ["Small", "Tall", "Fast"],
+    "answer": "Small"
+  },
+  {
+    "id": "a1-hard-fb-1",
+    "level": "A1",
+    "difficulty": "hard",
+    "type": "fill-blank",
+    "prompt": "We ___ happy today.",
+    "answer": "are"
+  },
+  {
+    "id": "a1-hard-match-1",
+    "level": "A1",
+    "difficulty": "hard",
+    "type": "matching",
+    "prompt": "Match each number with its word.",
+    "pairs": [
+      {
+        "left": "1",
+        "right": "One"
+      },
+      {
+        "left": "2",
+        "right": "Two"
+      },
+      {
+        "left": "3",
+        "right": "Three"
+      },
+      {
+        "left": "4",
+        "right": "Four"
+      }
+    ]
+  },
+  {
+    "id": "a1-hard-wo-1",
+    "level": "A1",
+    "difficulty": "hard",
+    "type": "word-order",
+    "prompt": "Put the words in order.",
+    "words": ["playing", "is", "She", "piano", "the"],
+    "answer": "She is playing the piano"
+  },
+  {
+    "id": "a1-hard-fb-2",
+    "level": "A1",
+    "difficulty": "hard",
+    "type": "fill-blank",
+    "prompt": "They ___ (not/like) spinach.",
+    "answer": "don't like"
+  },
+  {
+    "id": "a1-hard-mc-2",
+    "level": "A1",
+    "difficulty": "hard",
+    "type": "multiple-choice",
+    "prompt": "Choose the correct question.",
+    "options": ["Where you are from?", "Where are you from?", "Where you from?"],
+    "answer": "Where are you from?"
+  }
+]

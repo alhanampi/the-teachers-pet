@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import exercisesData from "../../data/exercises.json";
+import { exercises } from "../../data/exercises";
 import type { Exercise as ExerciseType } from "../../types/exercise";
 import { useStudent } from "../../state/StudentContext";
 import { Screen, Subtitle } from "../../components/ui/Screen";
@@ -9,9 +9,10 @@ import { MultipleChoice } from "../../components/exercises/MultipleChoice";
 import { FillBlank } from "../../components/exercises/FillBlank";
 import { Matching } from "../../components/exercises/Matching";
 import { WordOrder } from "../../components/exercises/WordOrder";
+import { shuffleArray } from "../../lib/shuffle";
 import { Actions, Feedback } from "./Exercise.styles";
 
-const exercises = exercisesData as ExerciseType[];
+const ROUND_SIZE = 5;
 
 function renderExercise(
   exercise: ExerciseType,
@@ -62,13 +63,12 @@ function renderExercise(
 export function Exercise() {
   const { level, difficulty, completeExercise, finishExercises } = useStudent();
 
-  const pool = useMemo(
-    () =>
-      exercises.filter(
-        (exercise) => exercise.level === level && exercise.difficulty === difficulty,
-      ),
-    [level, difficulty],
-  );
+  const pool = useMemo(() => {
+    const matching = exercises.filter(
+      (exercise) => exercise.level === level && exercise.difficulty === difficulty,
+    );
+    return shuffleArray(matching).slice(0, ROUND_SIZE);
+  }, [level, difficulty]);
 
   const [index, setIndex] = useState(0);
   const [attempt, setAttempt] = useState(0);

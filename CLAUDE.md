@@ -83,7 +83,14 @@ src/
   lib/
     api.ts               wrappers fetch a /api/*
   data/
-    exercises.json
+    exercises/
+      index.ts            junta los 6 JSON de nivel en un solo array `Exercise[]`
+      a1.json
+      a2.json
+      b1.json
+      b2.json
+      c1.json
+      c2.json
   types/
     exercise.ts
   styles/
@@ -158,7 +165,7 @@ mantienen cuando se agregue el backoffice docente en fase 2.
   Postgres (`invalid input syntax for type uuid: "..."`, nombres de columnas, etc.) es
   información interna que no debe llegar al browser.
 - **XSS: confiar en el escapeo de React, no reinventar sanitización.** JSX escapa automáticamente
-  todo lo que se renderiza como texto (nombre del alumno, contenido de `exercises.json`, etc.).
+  todo lo que se renderiza como texto (nombre del alumno, contenido de `src/data/exercises/`, etc.).
   Por eso: nunca usar `dangerouslySetInnerHTML` con datos que vengan del alumno o de la base, y
   nunca construir HTML a mano con template strings para insertarlo en el DOM.
 - **Secrets fuera del repo.** `DATABASE_URL` vive únicamente en `.env.local` (local) o en las
@@ -173,10 +180,20 @@ mantienen cuando se agregue el backoffice docente en fase 2.
 
 ## Ejercicios
 
-`src/data/exercises.json`, tipado en `src/types/exercise.ts` como unión discriminada por `type`:
+Los ejercicios están en `src/data/exercises/`, un JSON por nivel (`a1.json`, `a2.json`, ...,
+`c2.json`) en vez de un único archivo gigante — más fácil de mantener y de repartir entre quien
+va sumando contenido. `src/data/exercises/index.ts` importa los 6 archivos y exporta un solo
+array `exercises: Exercise[]`; el resto de la app importa siempre desde ahí (`from
+"../../data/exercises"`), nunca un JSON de nivel individual. Cada ejercicio se tipa en
+`src/types/exercise.ts` como unión discriminada por `type`:
 `"multiple-choice" | "fill-blank" | "matching" | "word-order"`. Cada tipo tiene su propio
 componente en `src/components/exercises/`, todos con la interfaz
 `{ exercise, onComplete(correct: boolean) }`.
+
+`Exercise.tsx` arma cada ronda filtrando `exercises` por nivel/dificultad elegidos, los mezcla con
+`shuffleArray` (`src/lib/shuffle.ts`) y se queda con los primeros `ROUND_SIZE` (5). Si hay menos
+de 5 disponibles para esa combinación, la ronda es más corta — no se repiten ejercicios para
+completar el cupo.
 
 Si la respuesta es incorrecta, `Exercise.tsx` ofrece "Try again" además de "Next": reintentar
 remonta el componente del ejercicio (cambiando su `key` a `${exercise.id}-${attempt}`) para que

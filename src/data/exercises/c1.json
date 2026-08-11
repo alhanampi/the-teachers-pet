@@ -1,0 +1,268 @@
+[
+  {
+    "id": "c1-easy-mc-1",
+    "level": "C1",
+    "difficulty": "easy",
+    "type": "multiple-choice",
+    "prompt": "Choose the sentence with the correct use of 'used to'.",
+    "options": ["I used to living in Paris", "I used to live in Paris", "I use to live in Paris"],
+    "answer": "I used to live in Paris"
+  },
+  {
+    "id": "c1-easy-mc-2",
+    "level": "C1",
+    "difficulty": "easy",
+    "type": "multiple-choice",
+    "prompt": "Choose the correct phrasal verb meaning 'to postpone'.",
+    "options": ["put off", "put up", "put on"],
+    "answer": "put off"
+  },
+  {
+    "id": "c1-easy-fb-1",
+    "level": "C1",
+    "difficulty": "easy",
+    "type": "fill-blank",
+    "prompt": "She's been working here ___ 2015.",
+    "answer": "since"
+  },
+  {
+    "id": "c1-easy-fb-2",
+    "level": "C1",
+    "difficulty": "easy",
+    "type": "fill-blank",
+    "prompt": "He apologized ___ being late.",
+    "answer": "for"
+  },
+  {
+    "id": "c1-easy-wo-1",
+    "level": "C1",
+    "difficulty": "easy",
+    "type": "word-order",
+    "prompt": "Put the words in order.",
+    "words": ["I", "have", "seen", "this", "movie", "before"],
+    "answer": "I have seen this movie before"
+  },
+  {
+    "id": "c1-easy-match-1",
+    "level": "C1",
+    "difficulty": "easy",
+    "type": "matching",
+    "prompt": "Match each phrasal verb with its meaning.",
+    "pairs": [
+      {
+        "left": "Bring up",
+        "right": "Mention"
+      },
+      {
+        "left": "Carry out",
+        "right": "Perform"
+      },
+      {
+        "left": "Come across",
+        "right": "Find by chance"
+      },
+      {
+        "left": "Point out",
+        "right": "Indicate"
+      }
+    ]
+  },
+  {
+    "id": "c1-easy-match-2",
+    "level": "C1",
+    "difficulty": "easy",
+    "type": "matching",
+    "prompt": "Match each formal connector with its everyday meaning.",
+    "pairs": [
+      {
+        "left": "Nevertheless",
+        "right": "However"
+      },
+      {
+        "left": "Consequently",
+        "right": "As a result"
+      },
+      {
+        "left": "Moreover",
+        "right": "In addition"
+      },
+      {
+        "left": "Furthermore",
+        "right": "Also"
+      }
+    ]
+  },
+  {
+    "id": "c1-medium-mc-1",
+    "level": "C1",
+    "difficulty": "medium",
+    "type": "multiple-choice",
+    "prompt": "Choose the sentence with correct grammar.",
+    "options": [
+      "By next year, she will have graduated.",
+      "By next year, she will graduated.",
+      "By next year, she have graduated."
+    ],
+    "answer": "By next year, she will have graduated."
+  },
+  {
+    "id": "c1-medium-match-1",
+    "level": "C1",
+    "difficulty": "medium",
+    "type": "matching",
+    "prompt": "Match each idiom with the emoji that captures its meaning.",
+    "pairs": [
+      {
+        "left": "Over the moon",
+        "right": "🥳"
+      },
+      {
+        "left": "Under the weather",
+        "right": "🤒"
+      },
+      {
+        "left": "Piece of cake",
+        "right": "🍰"
+      },
+      {
+        "left": "Break the ice",
+        "right": "🧊"
+      }
+    ]
+  },
+  {
+    "id": "c1-medium-mc-2",
+    "level": "C1",
+    "difficulty": "medium",
+    "type": "multiple-choice",
+    "prompt": "Choose the sentence with the correct use of 'wish'.",
+    "options": [
+      "I wish I know the answer",
+      "I wish I knew the answer",
+      "I wish I would know the answer"
+    ],
+    "answer": "I wish I knew the answer"
+  },
+  {
+    "id": "c1-medium-fb-1",
+    "level": "C1",
+    "difficulty": "medium",
+    "type": "fill-blank",
+    "prompt": "No sooner ___ (he/leave) than it started to rain.",
+    "answer": "had he left"
+  },
+  {
+    "id": "c1-medium-fb-2",
+    "level": "C1",
+    "difficulty": "medium",
+    "type": "fill-blank",
+    "prompt": "It's high time we ___ (make) a decision.",
+    "answer": "made"
+  },
+  {
+    "id": "c1-medium-wo-1",
+    "level": "C1",
+    "difficulty": "medium",
+    "type": "word-order",
+    "prompt": "Put the words in order.",
+    "words": ["I", "would", "rather", "stay", "home", "tonight"],
+    "answer": "I would rather stay home tonight"
+  },
+  {
+    "id": "c1-medium-match-2",
+    "level": "C1",
+    "difficulty": "medium",
+    "type": "matching",
+    "prompt": "Match each idiom with the emoji that captures its meaning.",
+    "pairs": [
+      {
+        "left": "On cloud nine",
+        "right": "🥰"
+      },
+      {
+        "left": "In hot water",
+        "right": "😰"
+      },
+      {
+        "left": "Once in a blue moon",
+        "right": "🌙"
+      },
+      {
+        "left": "Let the cat out of the bag",
+        "right": "🙊"
+      }
+    ]
+  },
+  {
+    "id": "c1-hard-match-1",
+    "level": "C1",
+    "difficulty": "hard",
+    "type": "matching",
+    "prompt": "Match each country with its flag.",
+    "pairs": [
+      {
+        "left": "Japan",
+        "right": "🇯🇵"
+      },
+      {
+        "left": "Brazil",
+        "right": "🇧🇷"
+      },
+      {
+        "left": "France",
+        "right": "🇫🇷"
+      },
+      {
+        "left": "Argentina",
+        "right": "🇦🇷"
+      }
+    ]
+  },
+  {
+    "id": "c1-hard-mc-1",
+    "level": "C1",
+    "difficulty": "hard",
+    "type": "multiple-choice",
+    "prompt": "Choose the sentence with the correct cleft structure.",
+    "options": ["What I need is a break", "What I need it is a break", "What do I need is a break"],
+    "answer": "What I need is a break"
+  },
+  {
+    "id": "c1-hard-mc-2",
+    "level": "C1",
+    "difficulty": "hard",
+    "type": "multiple-choice",
+    "prompt": "Choose the sentence with the correct use of 'had better'.",
+    "options": [
+      "You had better to leave now",
+      "You had better leave now",
+      "You had better leaving now"
+    ],
+    "answer": "You had better leave now"
+  },
+  {
+    "id": "c1-hard-fb-1",
+    "level": "C1",
+    "difficulty": "hard",
+    "type": "fill-blank",
+    "prompt": "Rarely ___ (we/see) such dedication.",
+    "answer": "have we seen"
+  },
+  {
+    "id": "c1-hard-fb-2",
+    "level": "C1",
+    "difficulty": "hard",
+    "type": "fill-blank",
+    "prompt": "Were it not ___ your help, I would have failed.",
+    "answer": "for"
+  },
+  {
+    "id": "c1-hard-wo-1",
+    "level": "C1",
+    "difficulty": "hard",
+    "type": "word-order",
+    "prompt": "Put the words in order.",
+    "words": ["Had", "I", "known", "I", "would", "have", "acted", "differently"],
+    "answer": "Had I known I would have acted differently"
+  }
+]

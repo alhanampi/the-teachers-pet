@@ -1,0 +1,269 @@
+[
+  {
+    "id": "b1-easy-mc-1",
+    "level": "B1",
+    "difficulty": "easy",
+    "type": "multiple-choice",
+    "prompt": "Choose the correct sentence.",
+    "options": ["She don't like tea", "She doesn't like tea", "She not like tea"],
+    "answer": "She doesn't like tea"
+  },
+  {
+    "id": "b1-easy-fb-1",
+    "level": "B1",
+    "difficulty": "easy",
+    "type": "fill-blank",
+    "prompt": "If I ___ (have) time, I would help you.",
+    "answer": "had"
+  },
+  {
+    "id": "b1-easy-match-1",
+    "level": "B1",
+    "difficulty": "easy",
+    "type": "matching",
+    "prompt": "Match the phrasal verb with its meaning.",
+    "pairs": [
+      {
+        "left": "Give up",
+        "right": "Stop trying"
+      },
+      {
+        "left": "Look for",
+        "right": "Search"
+      },
+      {
+        "left": "Turn off",
+        "right": "Switch off"
+      },
+      {
+        "left": "Find out",
+        "right": "Discover"
+      }
+    ]
+  },
+  {
+    "id": "b1-easy-match-2",
+    "level": "B1",
+    "difficulty": "easy",
+    "type": "matching",
+    "prompt": "Match each mode of transport with its emoji.",
+    "pairs": [
+      {
+        "left": "Car",
+        "right": "🚗"
+      },
+      {
+        "left": "Bicycle",
+        "right": "🚲"
+      },
+      {
+        "left": "Airplane",
+        "right": "✈️"
+      },
+      {
+        "left": "Train",
+        "right": "🚆"
+      }
+    ]
+  },
+  {
+    "id": "b1-easy-wo-1",
+    "level": "B1",
+    "difficulty": "easy",
+    "type": "word-order",
+    "prompt": "Put the words in order.",
+    "words": ["never", "have", "I", "Paris", "to", "been"],
+    "answer": "I have never been to Paris"
+  },
+  {
+    "id": "b1-easy-mc-2",
+    "level": "B1",
+    "difficulty": "easy",
+    "type": "multiple-choice",
+    "prompt": "Choose the correct present perfect sentence.",
+    "options": ["I have saw that movie", "I have seen that movie", "I have seeing that movie"],
+    "answer": "I have seen that movie"
+  },
+  {
+    "id": "b1-easy-fb-2",
+    "level": "B1",
+    "difficulty": "easy",
+    "type": "fill-blank",
+    "prompt": "She ___ (live) in London for five years.",
+    "answer": "has lived"
+  },
+  {
+    "id": "b1-medium-mc-1",
+    "level": "B1",
+    "difficulty": "medium",
+    "type": "multiple-choice",
+    "prompt": "Choose the correct reported speech.",
+    "options": ["He said he is tired", "He said he was tired", "He say he was tired"],
+    "answer": "He said he was tired"
+  },
+  {
+    "id": "b1-medium-fb-1",
+    "level": "B1",
+    "difficulty": "medium",
+    "type": "fill-blank",
+    "prompt": "By the time we arrived, the movie ___ (already/start).",
+    "answer": "had already started"
+  },
+  {
+    "id": "b1-medium-match-1",
+    "level": "B1",
+    "difficulty": "medium",
+    "type": "matching",
+    "prompt": "Match the phrasal verb with its meaning.",
+    "pairs": [
+      {
+        "left": "Break down",
+        "right": "Stop working"
+      },
+      {
+        "left": "Call off",
+        "right": "Cancel"
+      },
+      {
+        "left": "Put off",
+        "right": "Postpone"
+      },
+      {
+        "left": "Run into",
+        "right": "Meet by chance"
+      }
+    ]
+  },
+  {
+    "id": "b1-medium-wo-1",
+    "level": "B1",
+    "difficulty": "medium",
+    "type": "word-order",
+    "prompt": "Put the words in order.",
+    "words": ["been", "have", "I", "waiting", "an hour", "for"],
+    "answer": "I have been waiting for an hour"
+  },
+  {
+    "id": "b1-medium-match-2",
+    "level": "B1",
+    "difficulty": "medium",
+    "type": "matching",
+    "prompt": "Match each family member with its emoji.",
+    "pairs": [
+      {
+        "left": "Mother",
+        "right": "👩"
+      },
+      {
+        "left": "Father",
+        "right": "👨"
+      },
+      {
+        "left": "Sister",
+        "right": "👧"
+      },
+      {
+        "left": "Brother",
+        "right": "👦"
+      }
+    ]
+  },
+  {
+    "id": "b1-medium-mc-2",
+    "level": "B1",
+    "difficulty": "medium",
+    "type": "multiple-choice",
+    "prompt": "Choose the correct second conditional sentence.",
+    "options": [
+      "If I had more time, I will travel more",
+      "If I had more time, I would travel more",
+      "If I have more time, I would travel more"
+    ],
+    "answer": "If I had more time, I would travel more"
+  },
+  {
+    "id": "b1-medium-wo-2",
+    "level": "B1",
+    "difficulty": "medium",
+    "type": "word-order",
+    "prompt": "Put the words in order.",
+    "words": ["Have", "you", "ever", "been", "to", "Paris"],
+    "answer": "Have you ever been to Paris"
+  },
+  {
+    "id": "b1-hard-mc-1",
+    "level": "B1",
+    "difficulty": "hard",
+    "type": "multiple-choice",
+    "prompt": "Choose the sentence with the correct conditional.",
+    "options": [
+      "If I were you, I will study more",
+      "If I were you, I would study more",
+      "If I am you, I would study more"
+    ],
+    "answer": "If I were you, I would study more"
+  },
+  {
+    "id": "b1-hard-fb-1",
+    "level": "B1",
+    "difficulty": "hard",
+    "type": "fill-blank",
+    "prompt": "This book ___ (write) by a famous author.",
+    "answer": "was written"
+  },
+  {
+    "id": "b1-hard-match-1",
+    "level": "B1",
+    "difficulty": "hard",
+    "type": "matching",
+    "prompt": "Match the modal verb with its meaning.",
+    "pairs": [
+      {
+        "left": "Must",
+        "right": "Obligation"
+      },
+      {
+        "left": "Might",
+        "right": "Possibility"
+      },
+      {
+        "left": "Should",
+        "right": "Advice"
+      },
+      {
+        "left": "Can't",
+        "right": "Impossibility"
+      }
+    ]
+  },
+  {
+    "id": "b1-hard-wo-1",
+    "level": "B1",
+    "difficulty": "hard",
+    "type": "word-order",
+    "prompt": "Put the words in order.",
+    "words": ["worth", "It's", "trying", "again"],
+    "answer": "It's worth trying again"
+  },
+  {
+    "id": "b1-hard-mc-2",
+    "level": "B1",
+    "difficulty": "hard",
+    "type": "multiple-choice",
+    "prompt": "Choose the sentence with the correct passive voice.",
+    "options": [
+      "The letter was wrote by John",
+      "The letter was written by John",
+      "The letter written by John"
+    ],
+    "answer": "The letter was written by John"
+  },
+  {
+    "id": "b1-hard-fb-2",
+    "level": "B1",
+    "difficulty": "hard",
+    "type": "fill-blank",
+    "prompt": "If she ___ (study) harder, she would have passed the exam.",
+    "answer": "had studied"
+  }
+]
