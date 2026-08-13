@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import { exercises } from "../../data/exercises";
+import { useEffect, useMemo, useState } from "react";
 import type { Exercise as ExerciseType } from "../../types/exercise";
 import { useStudent } from "../../state/StudentContext";
 import { Screen, Subtitle } from "../../components/ui/Screen";
@@ -9,6 +8,7 @@ import { MultipleChoice } from "../../components/exercises/MultipleChoice";
 import { FillBlank } from "../../components/exercises/FillBlank";
 import { Matching } from "../../components/exercises/Matching";
 import { WordOrder } from "../../components/exercises/WordOrder";
+import { fetchExercises } from "../../lib/api";
 import { shuffleArray } from "../../lib/shuffle";
 import { Actions, Feedback } from "./Exercise.styles";
 
@@ -63,17 +63,34 @@ function renderExercise(
 export function Exercise() {
   const { level, difficulty, completeExercise, finishExercises } = useStudent();
 
+  const [exercises, setExercises] = useState<ExerciseType[] | null>(null);
+
+  useEffect(() => {
+    fetchExercises()
+      .then(setExercises)
+      .catch(() => setExercises([]));
+  }, []);
+
   const pool = useMemo(() => {
+    if (!exercises) return [];
     const matching = exercises.filter(
       (exercise) => exercise.level === level && exercise.difficulty === difficulty,
     );
     return shuffleArray(matching).slice(0, ROUND_SIZE);
-  }, [level, difficulty]);
+  }, [exercises, level, difficulty]);
 
   const [index, setIndex] = useState(0);
   const [attempt, setAttempt] = useState(0);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [pointAwarded, setPointAwarded] = useState(false);
+
+  if (!exercises) {
+    return (
+      <Screen>
+        <Subtitle>Loading exercises...</Subtitle>
+      </Screen>
+    );
+  }
 
   const current = pool[index];
 
@@ -91,7 +108,7 @@ export function Exercise() {
   const handleComplete = (correct: boolean) => {
     setFeedback(correct ? "correct" : "incorrect");
     if (!pointAwarded) {
-      completeExercise(current.id);
+      completeExercise(current.id, correct);
       setPointAwarded(true);
     }
   };

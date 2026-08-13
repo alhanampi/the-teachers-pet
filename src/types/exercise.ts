@@ -7,6 +7,7 @@ interface ExerciseBase {
   level: Level;
   difficulty: Difficulty;
   prompt: string;
+  hint?: string;
 }
 
 export interface MultipleChoiceExercise extends ExerciseBase {

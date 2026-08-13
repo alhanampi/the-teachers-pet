@@ -1,6 +1,6 @@
 import styled from "styled-components";
 
-export type ItemState = "neutral" | "selected" | "matched" | "wrong" | "revealed";
+export type ItemState = "neutral" | "selected" | "matched" | "wrong";
 
 export const Columns = styled.div`
   display: flex;
@@ -30,15 +30,15 @@ export const Item = styled.button<{ $state: ItemState }>`
           ? theme.colors.primary
           : $state === "wrong"
             ? theme.colors.error
-            : $state === "revealed"
-              ? theme.colors.accent
-              : theme.colors.secondary};
+            : theme.colors.secondary};
   background: ${({ theme, $state }) =>
     $state === "matched"
       ? theme.colors.success
       : $state === "wrong"
         ? theme.colors.error
-        : theme.colors.white};
+        : $state === "selected"
+          ? theme.colors.background
+          : theme.colors.white};
   color: ${({ theme, $state }) =>
     $state === "matched" || $state === "wrong" ? theme.colors.white : theme.colors.text};
   cursor: pointer;
