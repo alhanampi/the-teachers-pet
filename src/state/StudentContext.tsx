@@ -101,7 +101,7 @@ interface StudentContextValue extends StudentState {
   submitName: (name: string) => void;
   selectLevel: (level: Level) => void;
   selectDifficulty: (difficulty: Difficulty) => void;
-  completeExercise: (exerciseId: string) => void;
+  completeExercise: (exerciseId: string, correct: boolean) => void;
   finishExercises: () => void;
   playAgain: () => void;
   changeName: () => void;
@@ -116,6 +116,9 @@ export function StudentProvider({ children }: { children: ReactNode }) {
   const submitName = useCallback((name: string) => {
     const studentId = crypto.randomUUID();
     writeStoredProgress({ studentId, name, points: 0 });
+    if (navigator.storage?.persist) {
+      navigator.storage.persist().catch(() => {});
+    }
     dispatch({ type: "SESSION_READY", studentId, name, points: 0 });
     startSession(name, studentId).catch(() => {
       console.warn("Could not sync the session with the server; still using localStorage.");
@@ -130,7 +133,7 @@ export function StudentProvider({ children }: { children: ReactNode }) {
   );
 
   const completeExercise = useCallback(
-    (exerciseId: string) => {
+    (exerciseId: string, correct: boolean) => {
       if (!state.studentId || !state.level || !state.difficulty) return;
       const points = state.points + 1;
       writeStoredProgress({ studentId: state.studentId, name: state.name, points });
@@ -140,6 +143,7 @@ export function StudentProvider({ children }: { children: ReactNode }) {
         exerciseId,
         level: state.level,
         difficulty: state.difficulty,
+        correct,
       }).catch(() => {
         console.warn("Could not sync the point with the server; saved locally.");
       });

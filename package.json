@@ -1,7 +1,7 @@
 {
   "name": "english-teaching-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,9 +13,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@neondatabase/neon-js": "^0.7.0-beta",
     "@neondatabase/serverless": "^1.1.0",
+    "@radix-ui/react-alert-dialog": "^1.1.23",
+    "@radix-ui/react-dialog": "^1.1.23",
+    "jose": "^6.2.8",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.2",
     "styled-components": "^6.5.1"
   },
   "devDependencies": {
@@ -31,6 +36,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
     "globals": "^17.7.0",
+    "playwright": "^1.62.1",
     "prettier": "^3.9.6",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.65.0",

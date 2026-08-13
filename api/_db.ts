@@ -32,6 +32,24 @@ export function ensureSchema(): Promise<void> {
           created_at timestamptz NOT NULL DEFAULT now()
         )
       `;
+      await sql`
+        ALTER TABLE attempts ADD COLUMN IF NOT EXISTS correct boolean NOT NULL DEFAULT true
+      `;
+      await sql`
+        CREATE TABLE IF NOT EXISTS exercises (
+          id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+          level text NOT NULL,
+          difficulty text NOT NULL,
+          type text NOT NULL,
+          prompt text NOT NULL,
+          hint text,
+          options jsonb,
+          answer text,
+          pairs jsonb,
+          words jsonb,
+          created_at timestamptz NOT NULL DEFAULT now()
+        )
+      `;
     })();
   }
   return schemaReady;

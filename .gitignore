@@ -27,3 +27,6 @@ dist-ssr
 
 .vercel
 .env*
+
+skills/settings.local.json
+.claude/settings.local.json

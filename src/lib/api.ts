@@ -1,4 +1,4 @@
-import type { Difficulty, Level } from "../types/exercise";
+import type { Difficulty, Exercise, Level } from "../types/exercise";
 
 export interface SessionResponse {
   studentId: string;
@@ -31,10 +31,15 @@ export function recordAttempt(params: {
   exerciseId: string;
   level: Level;
   difficulty: Difficulty;
+  correct: boolean;
 }): Promise<AttemptResponse> {
   return fetch("/api/attempts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(params),
   }).then((res) => parseOrThrow<AttemptResponse>(res));
+}
+
+export function fetchExercises(): Promise<Exercise[]> {
+  return fetch("/api/exercises").then((res) => parseOrThrow<Exercise[]>(res));
 }

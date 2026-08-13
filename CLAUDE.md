@@ -1,68 +1,88 @@
 # Teacher's Pet
 
-App (PWA, mobile-first) para que niños de 7 a 12 años practiquen inglés. El alumno escribe su
-nombre, elige nivel (A1–C2) y dificultad, y resuelve ejercicios, ganando un punto por cada uno
-completado.
+App (PWA, mobile-first) for kids aged 7 to 12 to practice English. The student types their
+name, picks a level (A1–C2) and difficulty, and solves exercises, earning a point for each one
+completed.
 
-## Fase actual
+## Current phase
 
-**Fase 1: flujo del alumno, sin login.** Login (Clerk) y backoffice docente son fase 2, todavía
-no implementados. No adelantar esas piezas antes de que se pida explícitamente.
+**Phase 2 in progress: teacher dashboard.** The student still goes through their flow at `/`,
+with no login. There's also a teacher dashboard behind auth: `/auth` (login),
+`/admin/dashboard` (students + history) and `/admin/exercises` (exercise manager). The
+backoffice uses **Neon Auth** (not Clerk — see "Teacher auth"). Student login/signup still
+doesn't exist, by design: students don't have accounts.
 
 ## Stack
 
 - Vite + React + TypeScript
-- styled-components para todo el estilado (sin librerías de componentes de terceros, sin CSS
-  suelto ni estilos inline)
-- **PWA, mobile-first.** La app se instala como PWA (manifest + service worker vía
-  `vite-plugin-pwa`). Todo el diseño se piensa primero para celular/tablet: estilos base sin
-  media query = mobile, y se agregan `min-width` media queries (breakpoints en
-  `src/styles/theme.ts`) recién cuando hace falta adaptar a pantallas más grandes. Nunca al
-  revés (desktop-first con overrides para mobile).
-- **Sin router en esta fase.** El alumno hace todo en `/`: `App.tsx` renderiza según un `step`
-  (`"welcome" | "level" | "difficulty" | "exercise" | "summary"`) guardado en `StudentContext`,
-  sin cambiar de URL. `react-router-dom` se agrega recién en fase 2, para rutas del docente
-  (`/teacher`, `/teacher/login`) — el alumno nunca navega por URL.
-- Estado del alumno: React Context + `useReducer` (`src/state/StudentContext.tsx`). No usar
-  Redux/Zustand/otras libs de estado global salvo que el alcance crezca mucho.
-- Persistencia: Neon (Postgres) vía funciones serverless de Vercel en `/api/*.ts`. El browser
-  **nunca** se conecta directo a la base — todo pasa por `/api` usando
-  `@neondatabase/serverless`.
-- `vercel dev` (devDependency) para levantar frontend + `/api` juntos en local.
-- Clerk **no está instalado todavía** — se agrega junto con el backoffice en fase 2.
+- styled-components for all styling. No pre-styled third-party component libraries — but
+  headless/unstyled a11y primitives are fine when styled entirely with styled-components, e.g.
+  `@radix-ui/react-dialog`/`@radix-ui/react-alert-dialog` for `Modal`/`ConfirmDialog` (focus
+  trap, Escape-to-close, portal, ARIA roles come from Radix; all visuals come from our own
+  `.styles.ts` files).
+- **PWA, mobile-first.** The app installs as a PWA (manifest + service worker via
+  `vite-plugin-pwa`). All design is thought out for phone/tablet first: base styles with no
+  media query = mobile, and `min-width` media queries (breakpoints in `src/styles/theme.ts`) get
+  added only when adapting to bigger screens is needed. Never the other way around
+  (desktop-first with mobile overrides).
+- **`react-router-dom` only for the new routes.** The student still does everything at `/`
+  without ever changing URL: `StudentFlow` (`src/pages/StudentFlow`) renders based on the
+  `step` in `StudentContext`, same as before. The router (`src/App.tsx`) only adds `/auth`,
+  `/admin/dashboard(/:studentId)` and `/admin/exercises` — all behind `RequireAuth`
+  (`src/components/admin/RequireAuth`). The student never navigates by URL.
+- Student state: React Context + `useReducer` (`src/state/StudentContext.tsx`). Teacher state:
+  React Context with `useState` (`src/state/TeacherContext.tsx`), kept separate because its
+  lifecycle (auth session) has nothing to do with the student's. Don't use Redux/Zustand/other
+  global state libs unless the scope grows a lot.
+- Persistence: Neon (Postgres) via Vercel serverless functions in `/api/*.ts`. The browser
+  **never** connects directly to the database — everything goes through `/api` using
+  `@neondatabase/serverless`. Exercises also live in Neon (`exercises` table), not in JSON —
+  see "Exercises".
+- `vercel dev` (devDependency) to run frontend + `/api` together locally.
 
-## Convenciones de código
+## Code conventions
 
-- Componentes funcionales con hooks. Un componente por archivo.
-- Archivos de componente: `PascalCase.tsx`. Utilidades/helpers: `camelCase.ts`.
-- Props tipadas con `interface`. TypeScript estricto, nada de `any`.
-- Sin comentarios salvo para explicar un porqué no obvio (constraint oculto, workaround). Nunca
-  comentarios que describan qué hace el código.
-- **Cada componente vive en su propia carpeta, con su archivo de estilos separado:**
+- Functional components with hooks. One component per file.
+- Component files: `PascalCase.tsx`. Utilities/helpers: `camelCase.ts`.
+- Props typed with `interface`. Strict TypeScript, no `any`.
+- No comments except to explain a non-obvious why (hidden constraint, workaround). Never
+  comments that describe what the code does.
+- **Each component lives in its own folder, with its styles in a separate file:**
   `ComponentName/ComponentName.tsx` + `ComponentName/ComponentName.styles.ts` (+
-  `ComponentName/index.ts` re-exportando, para poder importar como
-  `from ".../ComponentName"`). Los `styled(...)` van siempre en el `.styles.ts`; el `.tsx` los
-  importa y solo tiene JSX + lógica. Nunca un `styled(...)` definido inline en el mismo archivo
-  que el componente.
-- Estilos siempre con styled-components, usando el theme centralizado en `src/styles/theme.ts`
-  (colores, spacing, radios, tipografía, breakpoints) + `ThemeProvider`. No hardcodear
-  colores/spacing fuera del theme.
-- No agregar abstracciones, flags o manejo de errores para casos que no pueden pasar en este
-  alcance. No diseñar para requisitos hipotéticos futuros.
+  `ComponentName/index.ts` re-exporting, so it can be imported as
+  `from ".../ComponentName"`). `styled(...)` calls always go in the `.styles.ts` file; the
+  `.tsx` imports them and only holds JSX + logic. Never a `styled(...)` defined inline in the
+  same file as the component.
+- Styles always with styled-components, using the centralized theme in `src/styles/theme.ts`
+  (colors, spacing, radii, typography, breakpoints) + `ThemeProvider`. Don't hardcode
+  colors/spacing outside the theme.
+- Don't add abstractions, flags, or error handling for cases that can't happen within this
+  scope. Don't design for hypothetical future requirements.
 
-## Estructura de carpetas
+## Folder structure
 
 ```
 api/
-  _db.ts              helper de conexión Neon (CREATE TABLE IF NOT EXISTS incluido)
-  session.ts          POST — crea/recupera alumno
-  attempts.ts         POST — registra intento, suma punto
-  progress.ts         GET  — puntos actuales de un alumno
+  _db.ts              Neon connection helper (CREATE TABLE/ALTER TABLE IF NOT EXISTS included)
+  _validate.ts        shared validators (level, difficulty, exercise type, uuid, lengths...)
+  _auth.ts             requireTeacher(req): verifies the Neon Auth JWT + email allowlist
+  session.ts          POST — creates/retrieves a student
+  attempts.ts          POST — records an attempt (with `correct`), adds a point
+  progress.ts          GET  — a student's current points
+  exercises.ts         GET (public) / POST (teacher) — exercise catalog
+  students.ts          GET (teacher) — list of students
+  student-attempts.ts GET (teacher) ?studentId= — a student's attempt history
 public/
-  manifest.webmanifest (o generado por vite-plugin-pwa), íconos PWA
+  manifest.webmanifest (or generated by vite-plugin-pwa), PWA icons
 src/
   main.tsx
-  App.tsx             renderiza el step actual (sin router)
+  App.tsx             defines the routes (BrowserRouter): "/", "/auth", "/admin/*"
+  pages/
+    StudentFlow/        what used to live in App.tsx: Header + the student's current step
+    Auth/               teacher login
+    AdminDashboard/     list of students
+    AdminStudentDetail/ a student's history + summary of where to improve
+    AdminExercises/     filters + list + creation of exercises
   steps/
     Welcome/
       Welcome.tsx
@@ -74,32 +94,31 @@ src/
     Summary/...
   components/
     layout/
-      Header/          dropdown de tema, visible en todas las pantallas
-    exercises/          un componente por tipo de ejercicio, cada uno en su carpeta
-    ui/                  Button, Card, PointsBadge, etc., cada uno en su carpeta
+      Header/          theme dropdown, visible on every student screen
+    exercises/          one component per exercise type, each in its own folder
+    admin/
+      RequireAuth/      route guard: redirects to /auth if there's no teacher session
+      AdminLayout/       nav (Students/Exercises) + logout, wraps the /admin/* screens
+      ExerciseForm/       create/edit/duplicate an exercise, fields depend on `type`
+    ui/                  Button, Card, Select, Input, Modal, FloatingButton, etc.
   state/
     StudentContext.tsx
-    ThemeContext.tsx    tema de color activo + selector, persistido en localStorage
+    TeacherContext.tsx  teacher session (Neon Auth), separate from StudentContext
+    ThemeContext.tsx    active color theme + picker, persisted in localStorage
   lib/
-    api.ts               wrappers fetch a /api/*
-  data/
-    exercises/
-      index.ts            junta los 6 JSON de nivel en un solo array `Exercise[]`
-      a1.json
-      a2.json
-      b1.json
-      b2.json
-      c1.json
-      c2.json
+    api.ts               public fetch wrappers to /api/* (session, attempts, exercise catalog)
+    adminApi.ts           protected fetch wrappers (students, student-attempts, create exercise)
+    auth.ts               Neon Auth authClient + getTeacherToken()
   types/
     exercise.ts
+    admin.ts              Student, AttemptRecord
   styles/
-    theme.ts             forma del theme (colores, spacing, radios, breakpoints) + tipos
-    themes/               las 5 paletas de color disponibles
+    theme.ts             theme shape (colors, spacing, radii, breakpoints) + types
+    themes/               the 5 available color palettes
     GlobalStyle.ts
 ```
 
-## Modelo de datos (Neon)
+## Data model (Neon)
 
 ```sql
 students (
@@ -116,162 +135,251 @@ attempts (
   level text not null,
   difficulty text not null,
   points integer not null default 1,
+  correct boolean not null default true,
+  created_at timestamptz not null default now()
+)
+
+exercises (
+  id uuid primary key default gen_random_uuid(),
+  level text not null,
+  difficulty text not null,
+  type text not null,
+  prompt text not null,
+  hint text,               -- optional; stored but not shown to the student yet
+  options jsonb,           -- multiple-choice
+  answer text,             -- multiple-choice, fill-blank, word-order
+  pairs jsonb,              -- matching: [{left, right}]
+  words jsonb,              -- word-order: authored directly by the teacher (ordered list);
+                            -- answer is derived from words.join(" ") server-side
   created_at timestamptz not null default now()
 )
 ```
 
-`students.points` está desnormalizado para lectura rápida. `attempts` guarda el historial
-completo, pensado para el backoffice docente de fase 2.
+`students.points` is denormalized for fast reads. `attempts` keeps the full history (including
+`correct`, for the teacher's history view). `exercises` replaces the phase-1 JSON files in
+`src/data/` — see "Exercises".
 
-## Contrato de `/api`
+## Duplicate students
 
-- `POST /api/session` — body `{ name: string, studentId?: string }`. Si `studentId` existe y es
-  válido, reutiliza ese alumno (actualiza `name` si cambió); si no, crea uno nuevo. Devuelve
-  `{ studentId, name, points }`.
+There's no login, so a student's identity is just a `studentId` in `localStorage`
+(`StudentContext.tsx`). If that gets cleared (browser data wipe, PWA reinstall), the next
+`submitName` creates a brand-new `students` row with `crypto.randomUUID()` — the same kid can
+end up with two or more rows sharing the same name. Two mitigations, both partial by design (no
+login was added, on purpose):
+
+- `submitName` calls `navigator.storage.persist()` (feature-detected, fire-and-forget) when a
+  session starts, to reduce (not eliminate) the chance the browser evicts `localStorage` under
+  storage pressure. It does nothing for a manual data wipe or reinstall — accepted limitation.
+- `AdminDashboard` visually clusters `students` rows that share the same normalized name (trim +
+  lowercase) under one group header, purely as a display aid — points and attempt history are
+  **never** summed or merged across rows, because two different kids could share a first name
+  and silently merging by name alone would be worse than the current bug. Each row still links
+  to its own `/admin/dashboard/:studentId` detail page. This is a client-side-only computation
+  over the existing `GET /api/students` response — no backend changes.
+
+## Teacher auth (Neon Auth)
+
+- The backoffice uses **Neon Auth** (Neon's Managed Better Auth), not Clerk. Already enabled on
+  the Neon project; `NEON_AUTH_BASE_URL`/`VITE_NEON_AUTH_URL` live in `.env.local`.
+- Client: `src/lib/auth.ts` exposes `authClient` (`createAuthClient` from
+  `@neondatabase/neon-js/auth`) and `getTeacherToken()`, which requests a fresh JWT from
+  `${VITE_NEON_AUTH_URL}/token` (with `credentials: "include"`, the session travels via
+  cross-site cookie). The JWT lives ~15 minutes — it's not cached in state, it's requested again
+  on every protected request (`src/lib/adminApi.ts`).
+- Server: `api/_auth.ts` exports `requireTeacher(req)`, which validates the
+  `Authorization: Bearer` header against Neon Auth's JWKS (`jose`) and also checks the email
+  against `ALLOWED_TEACHER_EMAILS` (env var, comma-separated list). **Neon Auth has no admin
+  panel to restrict who can sign up** (anyone can hit the public sign-up endpoint) — that's why
+  this allowlist is the real barrier, not the UI. The app never shows a sign-up screen; teacher
+  accounts are created by hand (Neon CLI or Better Auth's REST API).
+- `ALLOWED_TEACHER_EMAILS` needs to exist both in `.env.local` **and** registered on the Vercel
+  project (`vercel env add ...`) — `vercel dev` only injects into functions the env vars the
+  project has declared, not whatever happens to be in `.env.local`.
+
+## `/api` contract
+
+- `POST /api/session` — body `{ name: string, studentId?: string }`. If `studentId` exists and
+  is valid, reuses that student (updates `name` if it changed); otherwise creates a new one.
+  Returns `{ studentId, name, points }`.
 - `POST /api/attempts` — body `{ studentId: string, exerciseId: string, level: Level,
-difficulty: Difficulty }`. Inserta el intento, incrementa `students.points` en 1. Devuelve
+difficulty: Difficulty, correct: boolean }`. Inserts the attempt, increments `students.points`
+  by 1 (always, whether `correct` or not — the point is for participating). Returns
   `{ points }`.
-- `GET /api/progress?studentId=` — devuelve `{ name, points }`.
+- `GET /api/progress?studentId=` — returns `{ name, points }`.
+- `GET /api/exercises` — public, returns the full `Exercise[]` (student and teacher filter in
+  memory, same as before with the static array).
+- `POST /api/exercises` — protected (`requireTeacher`). Body: `{ level, difficulty, type,
+prompt, hint?, options?, answer?, pairs?, words? }` depending on `type` (word-order sends
+  `words`, not `answer` — `answer` is derived server-side as `words.join(" ")`). `id` is
+  generated server-side.
+- `PUT /api/exercises?id=` — protected (`requireTeacher`). Same body shape as `POST`; validates
+  `id` as a UUID and that the exercise exists (404 otherwise). Returns the updated exercise.
+- `DELETE /api/exercises?id=` — protected (`requireTeacher`). Validates `id` as a UUID; 404 if it
+  doesn't exist. Deletes the row — no cascade concerns, since `attempts.exercise_id` has no FK
+  constraint and `student-attempts.ts`'s `LEFT JOIN` already tolerates a missing exercise.
+- `GET /api/students` — protected. Returns `{ id, name, points, createdAt }[]`.
+- `GET /api/student-attempts?studentId=` — protected. Returns a student's history
+  (`AttemptRecord[]`, with `prompt`/`type` resolved via a `LEFT JOIN` to `exercises`).
 
-## Seguridad
+## Security
 
-Reglas fijas para todo lo que toque `/api` o inputs del alumno. No son solo para esta fase: se
-mantienen cuando se agregue el backoffice docente en fase 2.
+Fixed rules for anything that touches `/api` or student input. These aren't just for this
+phase: they hold once the teacher backoffice is added in phase 2.
 
-- **SQL solo parametrizado.** Con `@neondatabase/serverless`, las queries se escriben siempre
-  como tagged template: `` sql`SELECT ... WHERE id = ${valor}` ``. Nunca construir SQL con
-  concatenación/interpolación de strings, y nunca usar `sql.unsafe(...)` ni pasar identificadores
-  de tabla/columna que vengan de un request. Si algún día hace falta un identificador dinámico,
-  se valida antes contra una whitelist fija en código, nunca se arma con el valor crudo del
-  cliente.
-- **Todo `req.body`/`req.query` es hostil, no importa lo que exista en el frontend.** Los tipos
-  de TypeScript del cliente (`Level`, `Difficulty`, etc.) no protegen el endpoint: cualquiera
-  puede pegarle a `/api/*` directo con curl. Cada handler valida explícitamente lo que recibe
-  antes de tocar la base — eso vive en `api/_validate.ts` (`isValidUuid`, `isValidLevel`,
-  `isValidDifficulty`, límites de longitud) y cada handler (`session.ts`, `attempts.ts`,
-  `progress.ts`) lo usa antes de cualquier query. Si se agrega un campo nuevo con dominio
-  cerrado, se valida ahí, no solo con el tipo de TS.
-- **Longitudes acotadas también en el servidor.** El `maxLength` de un `<input>` es UX, no
-  seguridad — se puede saltear pegándole directo a la API. Cualquier string que se guarda en
-  Neon (`name`, `exerciseId`) tiene un límite explícito del lado del servidor
-  (`MAX_NAME_LENGTH`, `MAX_EXERCISE_ID_LENGTH` en `api/_validate.ts`).
-- **`studentId` se trata como credencial, no como dato público.** Se genera con
-  `crypto.randomUUID()` (no incremental, no adivinable) y todo endpoint que lo recibe valida que
-  tenga forma de UUID antes de usarlo en una query. No loguear `studentId` en texto plano fuera
-  de lo estrictamente necesario para debug.
-- **Los handlers de `/api` nunca devuelven el error crudo de Postgres al cliente.** Cada handler
-  envuelve su lógica en `try/catch`: loguea el error completo con `console.error` server-side y
-  responde con un mensaje genérico (`res.status(500).json({ error: "..." })`). Un mensaje de
-  Postgres (`invalid input syntax for type uuid: "..."`, nombres de columnas, etc.) es
-  información interna que no debe llegar al browser.
-- **XSS: confiar en el escapeo de React, no reinventar sanitización.** JSX escapa automáticamente
-  todo lo que se renderiza como texto (nombre del alumno, contenido de `src/data/exercises/`, etc.).
-  Por eso: nunca usar `dangerouslySetInnerHTML` con datos que vengan del alumno o de la base, y
-  nunca construir HTML a mano con template strings para insertarlo en el DOM.
-- **Secrets fuera del repo.** `DATABASE_URL` vive únicamente en `.env.local` (local) o en las
-  variables de entorno del proyecto en Vercel (deploy) — nunca hardcodeada en código ni
-  commiteada. `.gitignore` ignora explícitamente `.env` y `.env.*` (no solo `*.local`), así un
-  `.env` con la connection string real nunca puede terminar commiteado por error.
-- **Sin autenticación en fase 1** (ver "Fase actual"): cualquiera que tenga un `studentId` puede
-  leer/escribir el progreso de ese alumno vía `/api`. Es un riesgo aceptado mientras no haya
-  login — no agregar autenticación real antes de fase 2, pero tampoco bajar las validaciones de
-  arriba pensando que "total no hay login todavía": son la única barrera actual contra abuso e
-  inyección de datos basura en Neon.
+- **SQL only parameterized.** With `@neondatabase/serverless`, queries are always written as a
+  tagged template: `` sql`SELECT ... WHERE id = ${value}` ``. Never build SQL with string
+  concatenation/interpolation, and never use `sql.unsafe(...)` or pass table/column identifiers
+  that come from a request. If a dynamic identifier is ever needed, it's validated against a
+  fixed whitelist in code first — never built from the raw client value.
+- **Every `req.body`/`req.query` is hostile, no matter what exists in the frontend.** The
+  client's TypeScript types (`Level`, `Difficulty`, etc.) don't protect the endpoint: anyone can
+  hit `/api/*` directly with curl. Each handler explicitly validates what it receives before
+  touching the database — that lives in `api/_validate.ts` (`isValidUuid`, `isValidLevel`,
+  `isValidDifficulty`, length limits), and every handler (`session.ts`, `attempts.ts`,
+  `progress.ts`) uses it before any query. If a new field with a closed domain gets added, it
+  gets validated there, not just via the TS type.
+- **Bounded lengths on the server too.** An `<input>`'s `maxLength` is UX, not security — it can
+  be skipped by hitting the API directly. Any string that gets stored in Neon (`name`,
+  `exerciseId`) has an explicit server-side limit (`MAX_NAME_LENGTH`, `MAX_EXERCISE_ID_LENGTH`
+  in `api/_validate.ts`).
+- **`studentId` is treated as a credential, not public data.** It's generated with
+  `crypto.randomUUID()` (not incremental, not guessable), and every endpoint that receives it
+  validates it has UUID shape before using it in a query. Don't log `studentId` in plain text
+  outside what's strictly necessary for debugging.
+- **`/api` handlers never return the raw Postgres error to the client.** Every handler wraps its
+  logic in `try/catch`: logs the full error server-side with `console.error` and responds with a
+  generic message (`res.status(500).json({ error: "..." })`). A Postgres message
+  (`invalid input syntax for type uuid: "..."`, column names, etc.) is internal information that
+  shouldn't reach the browser.
+- **XSS: trust React's escaping, don't reinvent sanitization.** JSX automatically escapes
+  everything rendered as text (student name, `exercises` content, etc.). So: never use
+  `dangerouslySetInnerHTML` with data coming from the student, the teacher, or the database, and
+  never build HTML by hand with template strings to insert into the DOM.
+- **Secrets stay out of the repo.** `DATABASE_URL` lives only in `.env.local` (local) or in the
+  Vercel project's environment variables (deploy) — never hardcoded in code or committed.
+  `.gitignore` explicitly ignores `.env` and `.env.*` (not just `*.local`), so an `.env` with the
+  real connection string can never end up committed by mistake.
+- **The student still has no authentication, by design** (see "Current phase"): anyone with a
+  `studentId` can read/write that student's progress via `/api`. It's an accepted risk because
+  students don't have accounts — don't add student login, but also don't lower the validations
+  above: they're the only current barrier against abuse and garbage-data injection into Neon.
+  The teacher does have real auth (see "Teacher auth"); `/api/students`,
+  `/api/student-attempts` and `POST /api/exercises` are protected with `requireTeacher`.
 
-## Ejercicios
+## Exercises
 
-Los ejercicios están en `src/data/exercises/`, un JSON por nivel (`a1.json`, `a2.json`, ...,
-`c2.json`) en vez de un único archivo gigante — más fácil de mantener y de repartir entre quien
-va sumando contenido. `src/data/exercises/index.ts` importa los 6 archivos y exporta un solo
-array `exercises: Exercise[]`; el resto de la app importa siempre desde ahí (`from
-"../../data/exercises"`), nunca un JSON de nivel individual. Cada ejercicio se tipa en
-`src/types/exercise.ts` como unión discriminada por `type`:
-`"multiple-choice" | "fill-blank" | "matching" | "word-order"`. Cada tipo tiene su propio
-componente en `src/components/exercises/`, todos con la interfaz
-`{ exercise, onComplete(correct: boolean) }`.
+Exercises live in Neon's `exercises` table (see "Data model"), not in JSON — the phase-1 JSON
+files (`src/data/exercises/*.json`) were migrated once and deleted. Anything that needs the
+full catalog requests `GET /api/exercises` (`fetchExercises` in `src/lib/api.ts` for the
+student, the same fetch reused in `AdminExercises`) and filters in memory — the filtering
+pattern didn't change, only the data source. Each exercise is typed in `src/types/exercise.ts`
+as a discriminated union on `type`: `"multiple-choice" | "fill-blank" | "matching" |
+"word-order"`, with an optional `hint?: string` field in the database (not shown on the
+student's screen yet). Each type has its own component in `src/components/exercises/`, all
+sharing the `{ exercise, onComplete(correct: boolean), disabled? }` interface.
 
-`Exercise.tsx` arma cada ronda filtrando `exercises` por nivel/dificultad elegidos, los mezcla con
-`shuffleArray` (`src/lib/shuffle.ts`) y se queda con los primeros `ROUND_SIZE` (5). Si hay menos
-de 5 disponibles para esa combinación, la ronda es más corta — no se repiten ejercicios para
-completar el cupo.
+`Exercise.tsx` requests the catalog once when entering the step, builds the round by filtering
+on the chosen level/difficulty, shuffles with `shuffleArray` (`src/lib/shuffle.ts`) and keeps
+the first `ROUND_SIZE` (5). If fewer than 5 are available for that combination, the round is
+shorter — exercises aren't repeated to fill the quota.
 
-Si la respuesta es incorrecta, `Exercise.tsx` ofrece "Try again" además de "Next": reintentar
-remonta el componente del ejercicio (cambiando su `key` a `${exercise.id}-${attempt}`) para que
-recupere su estado inicial, en vez de agregarle a cada componente una función de reset propia. El
-punto se otorga una sola vez por ejercicio, en el primer intento (correcto o no) — reintentar no
-suma puntos de nuevo.
+**Creating/editing exercises**: only from `/admin/exercises` (`ExerciseForm`, reused for
+create/edit/duplicate via a `mode`/`initialValue` prop pair), never by editing the database by
+hand except to fix broken data. Teachers can edit or delete an existing exercise, or duplicate
+one (opens the form pre-filled, in create-mode — nothing is saved until "Save" is pressed), via
+`requireTeacher`-protected `PUT`/`DELETE /api/exercises?id=`. For `word-order`, the teacher
+authors the `words` field directly as an ordered list (add/remove, like `matching`'s `pairs`);
+`answer` (used for correctness-checking) is derived server-side as `words.join(" ")` — the
+client never sends `answer` for `word-order`. `WordOrder.tsx` still reshuffles `exercise.words`
+with `shuffleArray` on every render for display, unrelated to authoring order.
+
+If the answer is wrong, `Exercise.tsx` offers "Try again" in addition to "Next": retrying
+remounts the exercise component (changing its `key` to `${exercise.id}-${attempt}`) so it
+resets to its initial state, instead of giving every component its own reset function. The
+point is awarded only once per exercise, on the first attempt (correct or not) — retrying
+doesn't award points again.
 
 ## UI/UX
 
-Pensado para chicos de 7 a 12 años, **mobile-first** (celular y tablet como pantallas
-principales, desktop es secundario): tipografía redondeada (Google Font tipo "Baloo 2" o
-"Fredoka"), tamaños grandes, paleta brillante y de alto contraste, botones grandes con bordes
-redondeados y buen tamaño para el dedo (mínimo ~44px de alto). Feedback siempre
-positivo/alentador, nunca punitivo. Texto corto, apoyado en íconos/emojis. Layouts en columna
-única por default; grillas de más de una columna solo a partir de los breakpoints de tablet.
+Designed for kids aged 7 to 12, **mobile-first** (phone and tablet as the primary screens,
+desktop is secondary): rounded typography (a Google Font like "Baloo 2" or "Fredoka"), large
+sizes, a bright, high-contrast palette, big buttons with rounded corners and a good touch
+target (at least ~44px tall). Feedback is always positive/encouraging, never punitive. Short
+text, backed by icons/emojis. Single-column layouts by default; grids with more than one
+column only from tablet breakpoints up.
 
-**Ninguna pantalla debe requerir scroll**, ni siquiera con el teclado del celular desplegado
-(pantallas con input: `Welcome`, `FillBlank`). Para eso:
+**No screen should ever require scrolling**, not even with the phone's keyboard open (screens
+with input: `Welcome`, `FillBlank`). To achieve that:
 
-- `useViewportHeightSync` (`src/lib/useViewportHeightSync.ts`), montado una vez en `App.tsx`,
-  escucha `window.visualViewport` y guarda la altura real visible en la variable CSS
-  `--app-height`, que `GlobalStyle` usa para el `<html>` (con `100dvh` como fallback). Así el
-  layout se achica de verdad cuando aparece el teclado, en vez de quedar con la altura de antes.
-- El meta viewport en `index.html` incluye `interactive-widget=resizes-content` (ayuda a Chrome/
-  Android a achicar el viewport en vez de tapar contenido con el teclado).
-- `body`/`#root` tienen `overflow: hidden` — la página nunca scrollea como un todo.
-- `Screen` (`src/components/ui/Screen/Screen.styles.ts`) tiene su propio `overflow-y: auto` como
-  red de seguridad local (por ejemplo, con fuentes de accesibilidad muy grandes), pero el
-  objetivo es que nunca haga falta: por eso el gap/padding de `Screen` es compacto en mobile.
-- Antes de agregar contenido a una pantalla, pensar en el peor caso: celular chico (iPhone SE)
-  con teclado abierto (~250px de alto visible menos el header). Si no entra, achicar
-  espaciados/tamaños antes que agregar scroll.
+- `useViewportHeightSync` (`src/lib/useViewportHeightSync.ts`), mounted once in `App.tsx`,
+  listens to `window.visualViewport` and stores the real visible height in the `--app-height`
+  CSS variable, which `GlobalStyle` uses for `<html>` (with `100dvh` as a fallback). That way the
+  layout actually shrinks when the keyboard appears, instead of keeping its previous height.
+- The viewport meta tag in `index.html` includes `interactive-widget=resizes-content` (helps
+  Chrome/Android shrink the viewport instead of covering content with the keyboard).
+- `body`/`#root` have `overflow: hidden` — the page never scrolls as a whole.
+- `Screen` (`src/components/ui/Screen/Screen.styles.ts`) has its own `overflow-y: auto` as a
+  local safety net (e.g. with very large accessibility fonts), but the goal is that it's never
+  needed: that's why `Screen`'s gap/padding is compact on mobile.
+- Before adding content to a screen, think about the worst case: a small phone (iPhone SE) with
+  the keyboard open (~250px of visible height minus the header). If it doesn't fit, shrink
+  spacing/sizes before adding scroll.
 
-## Idioma
+## Language
 
-**Todo el texto que ve el alumno está en inglés**: títulos, subtítulos, botones, placeholders,
-aria-labels, nombres de los temas de color, `<title>` e `index.html` (`lang="en"`), y el
-manifest de la PWA. La única excepción son los datos de los propios ejercicios cuando el
-ejercicio requiere mezclar idiomas a propósito (por ejemplo, en `matching` de vocabulario donde
-el par derecho es la traducción al español de la palabra en inglés) — ahí no se traduce, porque
-traducirlo rompería el ejercicio. Este archivo (`CLAUDE.md`) y los comentarios de código quedan
-en español, porque son para quien desarrolla, no para el alumno.
+**All text the student sees is in English**: titles, subtitles, buttons, placeholders,
+aria-labels, color theme names, `<title>` and `index.html` (`lang="en"`), and the PWA manifest.
+The only exception is the exercise data itself when an exercise intentionally requires mixing
+languages (for example, in vocabulary `matching` where the right-hand pair is the Spanish
+translation of the English word) — that isn't translated, because translating it would break
+the exercise. Code comments stay in Spanish, because they're for whoever develops, not for the
+student.
 
-## Header y temas de color
+## Header and color themes
 
-Hay un `Header` fijo arriba de toda la app (todas las pantallas, incluida `Welcome`) con un
-dropdown para que el alumno elija entre **5 paletas de color** distintas (mismo layout y
-componentes, solo cambia el set de colores). Las 5 paletas viven como objetos `AppTheme` en
-`src/styles/themes/`, compartiendo la misma forma que `src/styles/theme.ts` define. La paleta
-elegida se guarda en `localStorage` y se aplica envolviendo la app en el `ThemeProvider` de
-styled-components con el theme activo (manejado desde `src/state/ThemeContext.tsx`, separado de
-`StudentContext` porque no tiene que ver con la sesión del alumno).
+There's a fixed `Header` above the whole app (every student screen, including `Welcome`) with a
+dropdown for the student to pick between **5 different color palettes** (same layout and
+components, only the color set changes). The 5 palettes live as `AppTheme` objects in
+`src/styles/themes/`, sharing the same shape `src/styles/theme.ts` defines. The chosen palette
+is saved in `localStorage` and applied by wrapping the app in styled-components'
+`ThemeProvider` with the active theme (handled from `src/state/ThemeContext.tsx`, separate from
+`StudentContext` because it has nothing to do with the student's session).
 
 ## PWA
 
-`vite-plugin-pwa` genera el manifest y el service worker. Nombre visible: **Teacher's Pet**.
-Ícono placeholder: una manzanita (todavía no hay logo definitivo) — vive como SVG en
-`public/icons/` y se referencia en el manifest y el favicon. Cuando haya un logo real, solo hay
-que reemplazar esos archivos, no la configuración. Mobile-first aplica tanto al CSS como a la
-disposición de los elementos táctiles (Header, botones de ejercicios, etc).
+`vite-plugin-pwa` generates the manifest and service worker. Display name: **Teacher's Pet**.
+Placeholder icon: a little apple (no final logo yet) — lives as an SVG in `public/icons/` and
+is referenced in the manifest and favicon. Once there's a real logo, only those files need to
+be replaced, not the config. Mobile-first applies to both the CSS and the layout of touch
+elements (Header, exercise buttons, etc).
 
-## Formateo
+## Formatting
 
-El formateo lo maneja **Prettier** (`.prettierrc.json`), no criterio manual ni el `--fix` de
-ESLint. `eslint-config-prettier` apaga las reglas de ESLint que puedan pisarse con Prettier.
-Antes de dar un cambio por terminado: `npm run format` (o `npm run format:check` para solo
-chequear, útil en CI).
+Formatting is handled by **Prettier** (`.prettierrc.json`), not manual judgment or ESLint's
+`--fix`. `eslint-config-prettier` turns off the ESLint rules that could clash with Prettier.
+Before considering a change done: `npm run format` (or `npm run format:check` to just check,
+useful in CI).
 
-## Cómo correr y verificar
+## How to run and verify
 
-- `npm run dev` para frontend solo; `vercel dev` para probar también `/api` contra Neon.
-- `npm run format:check`, `npx tsc --noEmit` y `npm run lint` antes de dar por terminado un
-  cambio.
-- Verificación manual: recorrer nombre → nivel → dificultad → ejercicios (los 4 tipos) →
-  resumen, y confirmar en la consola de Neon que aparecen filas en `students`/`attempts` y que
-  `points` se actualiza.
-- Requiere `DATABASE_URL` en `.env.local` (connection string de Neon, no se commitea).
+- `npm run dev` for frontend only; `vercel dev` to also test `/api` against Neon (needed to
+  test `/auth` and `/admin/*`, which depend on `/api`).
+- `npm run format:check`, `npx tsc --noEmit` and `npm run lint` before considering a change
+  done.
+- Manual student verification: go through name → level → difficulty → exercises (all 4 types)
+  → summary, and confirm in Neon that rows show up in `students`/`attempts` (with `correct` set
+  correctly) and that `points` updates.
+- Manual teacher verification: log in at `/auth`, confirm that without a session `/admin/*`
+  redirects to `/auth`; in `/admin/exercises` change all 3 filters and see the counter react,
+  create one exercise of each type (with a hint) and confirm it shows up in the list and in the
+  student's round if level/difficulty match; in `/admin/dashboard` open a student and confirm
+  the history and the "where to improve" summary match the attempts made.
+- Requires `DATABASE_URL` in `.env.local` (Neon connection string, not committed), plus
+  `NEON_AUTH_BASE_URL`/`VITE_NEON_AUTH_URL` and `ALLOWED_TEACHER_EMAILS` (the latter also
+  registered on the Vercel project, not just in `.env.local` — see "Teacher auth").
 
-## Fuera de alcance ahora
+## Out of scope for now
 
-Login con Clerk, backoffice docente, mover ejercicios de JSON a la base de datos. Son fase 2.
+Multiple teacher accounts with different roles, manual point editing, exporting reports, showing
+the `hint` on the student's screen (the data is already stored, the student-side UI is
+missing).

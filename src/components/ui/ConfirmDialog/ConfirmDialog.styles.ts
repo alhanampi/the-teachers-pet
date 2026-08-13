@@ -1,28 +1,33 @@
 import styled from "styled-components";
 import { media } from "../../../styles/theme";
 
-export const Backdrop = styled.div`
+export const Overlay = styled.div`
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: ${({ theme }) => theme.spacing.md};
   z-index: 50;
 `;
 
-export const Panel = styled.div`
+export const StyledContent = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 51;
   background: ${({ theme }) => theme.colors.surface};
   border-radius: ${({ theme }) => theme.radii.lg};
   box-shadow: ${({ theme }) => theme.shadows.card} rgba(0, 0, 0, 0.2);
   padding: ${({ theme }) => theme.spacing.lg};
-  width: 100%;
+  width: calc(100% - ${({ theme }) => theme.spacing.md} * 2);
   max-width: 360px;
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.md};
   text-align: center;
+
+  &:focus {
+    outline: none;
+  }
 `;
 
 export const Message = styled.p`

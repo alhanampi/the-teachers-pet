@@ -6,7 +6,15 @@
       "Bash(npx *)",
       "Bash(lsof *)",
       "Bash(kill *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(pkill -f \"vercel dev\")",
+      "Bash(pkill -f \"vite --port\")",
+      "Bash(npx playwright *)",
+      "Bash(npx vercel *)",
+      "Bash(netstat -ano)",
+      "Bash(git status *)",
+      "Bash(git reset *)",
+      "Bash(git pull *)"
     ]
   }
 }

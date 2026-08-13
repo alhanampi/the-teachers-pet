@@ -1,6 +1,12 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { ensureSchema, sql } from "./_db";
-import { isValidDifficulty, isValidLevel, isValidUuid, MAX_EXERCISE_ID_LENGTH } from "./_validate";
+import {
+  isValidBoolean,
+  isValidDifficulty,
+  isValidLevel,
+  isValidUuid,
+  MAX_EXERCISE_ID_LENGTH,
+} from "./_validate";
 
 interface PointsRow {
   points: number;
@@ -12,11 +18,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const { studentId, exerciseId, level, difficulty } = req.body as {
+  const { studentId, exerciseId, level, difficulty, correct } = req.body as {
     studentId?: string;
     exerciseId?: string;
     level?: string;
     difficulty?: string;
+    correct?: boolean;
   };
 
   if (
@@ -25,9 +32,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     !exerciseId ||
     exerciseId.length > MAX_EXERCISE_ID_LENGTH ||
     !isValidLevel(level) ||
-    !isValidDifficulty(difficulty)
+    !isValidDifficulty(difficulty) ||
+    !isValidBoolean(correct)
   ) {
-    res.status(400).json({ error: "studentId, exerciseId, level and difficulty are required" });
+    res
+      .status(400)
+      .json({ error: "studentId, exerciseId, level, difficulty and correct are required" });
     return;
   }
 
@@ -35,8 +45,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await ensureSchema();
 
     await sql`
-      INSERT INTO attempts (student_id, exercise_id, level, difficulty)
-      VALUES (${studentId}, ${exerciseId}, ${level}, ${difficulty})
+      INSERT INTO attempts (student_id, exercise_id, level, difficulty, correct)
+      VALUES (${studentId}, ${exerciseId}, ${level}, ${difficulty}, ${correct})
     `;
 
     const rows = (await sql`

@@ -1,24 +1,30 @@
-import { useStudent } from "./state/StudentContext";
+import { Navigate, Route, BrowserRouter, Routes } from "react-router-dom";
 import { useViewportHeightSync } from "./lib/useViewportHeightSync";
-import { Header } from "./components/layout/Header";
-import { Welcome } from "./steps/Welcome";
-import { LevelSelect } from "./steps/LevelSelect";
-import { DifficultySelect } from "./steps/DifficultySelect";
-import { Exercise } from "./steps/Exercise";
-import { Summary } from "./steps/Summary";
+import { RequireAuth } from "./components/admin/RequireAuth";
+import { AdminLayout } from "./components/admin/AdminLayout";
+import { StudentFlow } from "./pages/StudentFlow";
+import { Auth } from "./pages/Auth";
+import { AdminDashboard } from "./pages/AdminDashboard";
+import { AdminStudentDetail } from "./pages/AdminStudentDetail";
+import { AdminExercises } from "./pages/AdminExercises";
 
 export function App() {
-  const { step } = useStudent();
   useViewportHeightSync();
 
   return (
-    <>
-      <Header />
-      {step === "welcome" && <Welcome />}
-      {step === "level" && <LevelSelect />}
-      {step === "difficulty" && <DifficultySelect />}
-      {step === "exercise" && <Exercise />}
-      {step === "summary" && <Summary />}
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<StudentFlow />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route element={<RequireAuth />}>
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/dashboard/:studentId" element={<AdminStudentDetail />} />
+            <Route path="/admin/exercises" element={<AdminExercises />} />
+          </Route>
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
