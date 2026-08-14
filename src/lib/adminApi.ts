@@ -41,6 +41,7 @@ export interface NewExercisePayload {
   answer?: string;
   pairs?: { left: string; right: string }[];
   words?: string[];
+  items?: string[];
 }
 
 export function createExercise(payload: NewExercisePayload): Promise<Exercise> {

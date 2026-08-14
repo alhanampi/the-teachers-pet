@@ -8,10 +8,18 @@ export const MAX_OPTIONS = 6;
 export const MAX_PAIRS = 10;
 export const MAX_WORDS = 20;
 export const MAX_WORD_LENGTH = 40;
+export const MAX_LISTENING_ITEM_LENGTH = 100;
+export const LISTENING_ITEMS_COUNT = 4;
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 const DIFFICULTIES = ["easy", "medium", "hard"] as const;
-const EXERCISE_TYPES = ["multiple-choice", "fill-blank", "matching", "word-order"] as const;
+const EXERCISE_TYPES = [
+  "multiple-choice",
+  "fill-blank",
+  "matching",
+  "word-order",
+  "listening",
+] as const;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -70,4 +78,16 @@ export function isValidWords(value: unknown): value is string[] {
     value.length <= MAX_WORDS &&
     value.every((word) => isNonEmptyString(word, MAX_WORD_LENGTH))
   );
+}
+
+export function isValidListeningItems(value: unknown): value is string[] {
+  if (
+    !Array.isArray(value) ||
+    value.length !== LISTENING_ITEMS_COUNT ||
+    !value.every((item) => isNonEmptyString(item, MAX_LISTENING_ITEM_LENGTH))
+  ) {
+    return false;
+  }
+  const normalized = value.map((item) => item.trim().toLowerCase());
+  return new Set(normalized).size === normalized.length;
 }

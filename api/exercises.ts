@@ -6,6 +6,7 @@ import {
   isValidDifficulty,
   isValidExerciseType,
   isValidLevel,
+  isValidListeningItems,
   isValidOptions,
   isValidPairs,
   isValidUuid,
@@ -14,6 +15,11 @@ import {
   MAX_HINT_LENGTH,
   MAX_PROMPT_LENGTH,
 } from "./_validate";
+
+interface ListeningItemRow {
+  text: string;
+  audioUrl: string | null;
+}
 
 interface ExerciseRow {
   id: string;
@@ -26,6 +32,7 @@ interface ExerciseRow {
   answer: string | null;
   pairs: { left: string; right: string }[] | null;
   words: string[] | null;
+  items: ListeningItemRow[] | null;
 }
 
 interface ExerciseBody {
@@ -38,6 +45,7 @@ interface ExerciseBody {
   answer?: unknown;
   pairs?: unknown;
   words?: unknown;
+  items?: unknown;
 }
 
 interface ExerciseFields {
@@ -46,6 +54,44 @@ interface ExerciseFields {
   answer: string | null;
   pairs: { left: string; right: string }[] | null;
   words: string[] | null;
+  items: ListeningItemRow[] | null;
+}
+
+const DICTIONARY_LOOKUP_TIMEOUT_MS = 3000;
+const SINGLE_WORD_RE = /^[a-z'-]+$/i;
+
+interface DictionaryPhonetic {
+  audio?: string;
+}
+
+interface DictionaryEntry {
+  phonetics?: DictionaryPhonetic[];
+}
+
+async function lookupDictionaryAudio(text: string): Promise<string | null> {
+  const word = text.trim();
+  if (!SINGLE_WORD_RE.test(word)) return null;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), DICTIONARY_LOOKUP_TIMEOUT_MS);
+  try {
+    const response = await fetch(
+      `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word.toLowerCase())}`,
+      { signal: controller.signal },
+    );
+    if (!response.ok) return null;
+    const entries = (await response.json()) as DictionaryEntry[];
+    for (const entry of entries) {
+      const audio = entry.phonetics?.find((phonetic) => phonetic.audio)?.audio;
+      if (audio) return audio;
+    }
+    return null;
+  } catch (error) {
+    console.error(`Dictionary lookup failed for "${word}"`, error);
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function isValidTopLevelFields(body: ExerciseBody): boolean {
@@ -58,7 +104,9 @@ function isValidTopLevelFields(body: ExerciseBody): boolean {
   );
 }
 
-function buildExerciseFields(body: ExerciseBody): ExerciseFields | { error: string } {
+async function buildExerciseFields(
+  body: ExerciseBody,
+): Promise<ExerciseFields | { error: string }> {
   const hint = body.hint ?? null;
 
   if (body.type === "multiple-choice") {
@@ -69,21 +117,38 @@ function buildExerciseFields(body: ExerciseBody): ExerciseFields | { error: stri
     ) {
       return { error: "Invalid multiple-choice fields" };
     }
-    return { hint, options: body.options, answer: body.answer, pairs: null, words: null };
+    return {
+      hint,
+      options: body.options,
+      answer: body.answer,
+      pairs: null,
+      words: null,
+      items: null,
+    };
   }
 
   if (body.type === "fill-blank") {
     if (!isNonEmptyString(body.answer, MAX_ANSWER_LENGTH)) {
       return { error: "Invalid fill-blank fields" };
     }
-    return { hint, options: null, answer: body.answer, pairs: null, words: null };
+    return { hint, options: null, answer: body.answer, pairs: null, words: null, items: null };
   }
 
   if (body.type === "matching") {
     if (!isValidPairs(body.pairs)) {
       return { error: "Invalid matching fields" };
     }
-    return { hint, options: null, answer: null, pairs: body.pairs, words: null };
+    return { hint, options: null, answer: null, pairs: body.pairs, words: null, items: null };
+  }
+
+  if (body.type === "listening") {
+    if (!isValidListeningItems(body.items)) {
+      return { error: "Invalid listening fields" };
+    }
+    const items = await Promise.all(
+      body.items.map(async (text) => ({ text, audioUrl: await lookupDictionaryAudio(text) })),
+    );
+    return { hint, options: null, answer: null, pairs: null, words: null, items };
   }
 
   // word-order
@@ -94,13 +159,13 @@ function buildExerciseFields(body: ExerciseBody): ExerciseFields | { error: stri
   if (answer.length > MAX_ANSWER_LENGTH) {
     return { error: "Invalid word-order fields" };
   }
-  return { hint, options: null, answer, pairs: null, words: body.words };
+  return { hint, options: null, answer, pairs: null, words: body.words, items: null };
 }
 
 async function handleGet(res: VercelResponse) {
   await ensureSchema();
   const rows = (await sql`
-    SELECT id, level, difficulty, type, prompt, hint, options, answer, pairs, words
+    SELECT id, level, difficulty, type, prompt, hint, options, answer, pairs, words, items
     FROM exercises
     ORDER BY level, difficulty, type
   `) as ExerciseRow[];
@@ -122,7 +187,7 @@ async function handlePost(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const fields = buildExerciseFields(body);
+  const fields = await buildExerciseFields(body);
   if ("error" in fields) {
     res.status(400).json({ error: fields.error });
     return;
@@ -131,7 +196,7 @@ async function handlePost(req: VercelRequest, res: VercelResponse) {
   await ensureSchema();
 
   const rows = (await sql`
-    INSERT INTO exercises (level, difficulty, type, prompt, hint, options, answer, pairs, words)
+    INSERT INTO exercises (level, difficulty, type, prompt, hint, options, answer, pairs, words, items)
     VALUES (
       ${body.level},
       ${body.difficulty},
@@ -141,9 +206,10 @@ async function handlePost(req: VercelRequest, res: VercelResponse) {
       ${fields.options ? JSON.stringify(fields.options) : null},
       ${fields.answer},
       ${fields.pairs ? JSON.stringify(fields.pairs) : null},
-      ${fields.words ? JSON.stringify(fields.words) : null}
+      ${fields.words ? JSON.stringify(fields.words) : null},
+      ${fields.items ? JSON.stringify(fields.items) : null}
     )
-    RETURNING id, level, difficulty, type, prompt, hint, options, answer, pairs, words
+    RETURNING id, level, difficulty, type, prompt, hint, options, answer, pairs, words, items
   `) as ExerciseRow[];
 
   res.status(201).json(rows[0]);
@@ -169,7 +235,7 @@ async function handlePut(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const fields = buildExerciseFields(body);
+  const fields = await buildExerciseFields(body);
   if ("error" in fields) {
     res.status(400).json({ error: fields.error });
     return;
@@ -188,9 +254,10 @@ async function handlePut(req: VercelRequest, res: VercelResponse) {
       options = ${fields.options ? JSON.stringify(fields.options) : null},
       answer = ${fields.answer},
       pairs = ${fields.pairs ? JSON.stringify(fields.pairs) : null},
-      words = ${fields.words ? JSON.stringify(fields.words) : null}
+      words = ${fields.words ? JSON.stringify(fields.words) : null},
+      items = ${fields.items ? JSON.stringify(fields.items) : null}
     WHERE id = ${id}
-    RETURNING id, level, difficulty, type, prompt, hint, options, answer, pairs, words
+    RETURNING id, level, difficulty, type, prompt, hint, options, answer, pairs, words, items
   `) as ExerciseRow[];
 
   if (rows.length === 0) {

@@ -32,5 +32,19 @@ export interface WordOrderExercise extends ExerciseBase {
   answer: string;
 }
 
+export interface ListeningItem {
+  text: string;
+  audioUrl: string | null;
+}
+
+export interface ListeningExercise extends ExerciseBase {
+  type: "listening";
+  items: ListeningItem[];
+}
+
 export type Exercise =
-  MultipleChoiceExercise | FillBlankExercise | MatchingExercise | WordOrderExercise;
+  | MultipleChoiceExercise
+  | FillBlankExercise
+  | MatchingExercise
+  | WordOrderExercise
+  | ListeningExercise;
