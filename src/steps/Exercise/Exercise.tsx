@@ -8,6 +8,7 @@ import { MultipleChoice } from "../../components/exercises/MultipleChoice";
 import { FillBlank } from "../../components/exercises/FillBlank";
 import { Matching } from "../../components/exercises/Matching";
 import { WordOrder } from "../../components/exercises/WordOrder";
+import { Listening } from "../../components/exercises/Listening";
 import { fetchExercises } from "../../lib/api";
 import { shuffleArray } from "../../lib/shuffle";
 import { Actions, Feedback } from "./Exercise.styles";
@@ -51,6 +52,15 @@ function renderExercise(
     case "word-order":
       return (
         <WordOrder
+          key={attemptKey}
+          exercise={exercise}
+          onComplete={onComplete}
+          disabled={disabled}
+        />
+      );
+    case "listening":
+      return (
+        <Listening
           key={attemptKey}
           exercise={exercise}
           onComplete={onComplete}

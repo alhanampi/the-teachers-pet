@@ -45,6 +45,7 @@ const TYPE_OPTIONS = [
   { value: "fill-blank", label: "Fill in the blank" },
   { value: "matching", label: "Matching" },
   { value: "word-order", label: "Word order" },
+  { value: "listening", label: "Listening" },
 ];
 
 type ModalState =
@@ -53,6 +54,9 @@ type ModalState =
 function formatAnswer(exercise: Exercise): string {
   if (exercise.type === "matching") {
     return exercise.pairs.map((pair) => `${pair.left} → ${pair.right}`).join(", ");
+  }
+  if (exercise.type === "listening") {
+    return exercise.items.map((item) => item.text).join(", ");
   }
   return exercise.answer;
 }

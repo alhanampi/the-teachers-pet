@@ -10,6 +10,7 @@ import {
   FieldList,
   FieldRow,
   Form,
+  HelperText,
   RemoveButton,
   Row,
 } from "./ExerciseForm.styles";
@@ -21,6 +22,7 @@ const TYPES: { value: Exercise["type"]; label: string }[] = [
   { value: "fill-blank", label: "Fill in the blank" },
   { value: "matching", label: "Matching" },
   { value: "word-order", label: "Word order" },
+  { value: "listening", label: "Listening" },
 ];
 
 const DEFAULT_OPTIONS = ["", ""];
@@ -30,6 +32,7 @@ const DEFAULT_PAIRS = [
   { left: "", right: "" },
 ];
 const DEFAULT_WORDS = ["", ""];
+const DEFAULT_LISTENING_ITEMS = ["", "", "", ""];
 
 interface Props {
   initialValue?: Exercise;
@@ -60,6 +63,11 @@ export function ExerciseForm({ initialValue, mode, onSaved, onCancel }: Props) {
   const [words, setWords] = useState(
     initialValue && initialValue.type === "word-order" ? initialValue.words : DEFAULT_WORDS,
   );
+  const [listeningItems, setListeningItems] = useState(
+    initialValue && initialValue.type === "listening"
+      ? initialValue.items.map((item) => item.text)
+      : DEFAULT_LISTENING_ITEMS,
+  );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -75,6 +83,13 @@ export function ExerciseForm({ initialValue, mode, onSaved, onCancel }: Props) {
     if (type === "word-order") {
       const cleanWords = words.map((word) => word.trim()).filter(Boolean);
       return cleanWords.length >= 2;
+    }
+    if (type === "listening") {
+      const cleanItems = listeningItems.map((item) => item.trim());
+      return (
+        cleanItems.every(Boolean) &&
+        new Set(cleanItems.map((item) => item.toLowerCase())).size === cleanItems.length
+      );
     }
     const cleanPairs = pairs.filter((pair) => pair.left.trim() && pair.right.trim());
     return cleanPairs.length >= 3;
@@ -99,6 +114,8 @@ export function ExerciseForm({ initialValue, mode, onSaved, onCancel }: Props) {
       payload.answer = answer.trim();
     } else if (type === "word-order") {
       payload.words = words.map((word) => word.trim()).filter(Boolean);
+    } else if (type === "listening") {
+      payload.items = listeningItems.map((item) => item.trim());
     } else {
       payload.pairs = pairs
         .map((pair) => ({ left: pair.left.trim(), right: pair.right.trim() }))
@@ -244,6 +261,30 @@ export function ExerciseForm({ initialValue, mode, onSaved, onCancel }: Props) {
               + Add word
             </AddButton>
           )}
+        </FieldList>
+      )}
+
+      {type === "listening" && (
+        <FieldList>
+          {listeningItems.map((item, index) => (
+            <FieldRow key={index}>
+              <Input
+                $compact
+                value={item}
+                onChange={(event) => {
+                  const next = [...listeningItems];
+                  next[index] = event.target.value;
+                  setListeningItems(next);
+                }}
+                placeholder={`Word or phrase ${index + 1}`}
+                maxLength={100}
+              />
+            </FieldRow>
+          ))}
+          <HelperText>
+            Single common English words get real pronunciation audio automatically; phrases will use
+            the device's built-in voice instead.
+          </HelperText>
         </FieldList>
       )}
 

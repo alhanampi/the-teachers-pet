@@ -51,3 +51,9 @@ export const ErrorMessage = styled.p`
   color: ${({ theme }) => theme.colors.error};
   font-size: ${({ theme }) => theme.fontSizes.sm};
 `;
+
+export const HelperText = styled.p`
+  margin: 0;
+  color: ${({ theme }) => theme.colors.textLight};
+  font-size: ${({ theme }) => theme.fontSizes.sm};
+`;

@@ -50,6 +50,9 @@ export function ensureSchema(): Promise<void> {
           created_at timestamptz NOT NULL DEFAULT now()
         )
       `;
+      await sql`
+        ALTER TABLE exercises ADD COLUMN IF NOT EXISTS items jsonb
+      `;
     })();
   }
   return schemaReady;
