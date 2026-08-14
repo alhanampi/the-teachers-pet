@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { ensureSchema, sql } from "./_db";
-import { isValidUuid } from "./_validate";
+import { ensureSchema, sql } from "./_db.js";
+import { isValidUuid } from "./_validate.js";
 
 interface ProgressRow {
   name: string;

@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireTeacher } from "./_auth";
-import { ensureSchema, sql } from "./_db";
-import { isValidUuid } from "./_validate";
+import { requireTeacher } from "./_auth.js";
+import { ensureSchema, sql } from "./_db.js";
+import { isValidUuid } from "./_validate.js";
 
 interface AttemptRow {
   id: string;

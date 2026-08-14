@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireTeacher } from "./_auth";
-import { ensureSchema, sql } from "./_db";
+import { requireTeacher } from "./_auth.js";
+import { ensureSchema, sql } from "./_db.js";
 import {
   isNonEmptyString,
   isValidDifficulty,
@@ -14,7 +14,7 @@ import {
   MAX_ANSWER_LENGTH,
   MAX_HINT_LENGTH,
   MAX_PROMPT_LENGTH,
-} from "./_validate";
+} from "./_validate.js";
 
 interface ListeningItemRow {
   text: string;

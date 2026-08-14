@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { ensureSchema, sql } from "./_db";
+import { ensureSchema, sql } from "./_db.js";
 import {
   isValidBoolean,
   isValidDifficulty,
   isValidLevel,
   isValidUuid,
   MAX_EXERCISE_ID_LENGTH,
-} from "./_validate";
+} from "./_validate.js";
 
 interface PointsRow {
   points: number;

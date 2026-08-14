@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { requireTeacher } from "./_auth";
-import { ensureSchema, sql } from "./_db";
+import { requireTeacher } from "./_auth.js";
+import { ensureSchema, sql } from "./_db.js";
 
 interface StudentRow {
   id: string;

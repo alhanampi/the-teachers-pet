@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { ensureSchema, sql } from "./_db";
-import { isValidUuid, MAX_NAME_LENGTH } from "./_validate";
+import { ensureSchema, sql } from "./_db.js";
+import { isValidUuid, MAX_NAME_LENGTH } from "./_validate.js";
 
 interface StudentRow {
   id: string;
