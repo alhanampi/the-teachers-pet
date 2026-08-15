@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { createExercise, updateExercise, type NewExercisePayload } from "../../../lib/adminApi";
+import { fetchDictionaryAudio } from "../../../lib/api";
+import { useAudioOrSpeech } from "../../../lib/useAudioOrSpeech";
 import type { Difficulty, Exercise, Level } from "../../../types/exercise";
 import { Button } from "../../ui/Button";
 import { Input } from "../../ui/Input";
@@ -11,6 +13,7 @@ import {
   FieldRow,
   Form,
   HelperText,
+  PreviewButton,
   RemoveButton,
   Row,
 } from "./ExerciseForm.styles";
@@ -70,6 +73,26 @@ export function ExerciseForm({ initialValue, mode, onSaved, onCancel }: Props) {
   );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [previewingIndex, setPreviewingIndex] = useState<number | null>(null);
+  const {
+    play: playPreview,
+    failed: previewFailed,
+    audioProps: previewAudioProps,
+  } = useAudioOrSpeech();
+
+  const handlePreview = async (index: number) => {
+    const text = listeningItems[index].trim();
+    if (!text) return;
+    setPreviewingIndex(index);
+    try {
+      const { audioUrl } = await fetchDictionaryAudio(text);
+      playPreview({ text, audioUrl });
+    } catch {
+      playPreview({ text, audioUrl: null });
+    } finally {
+      setPreviewingIndex(null);
+    }
+  };
 
   const isValid = (() => {
     if (!prompt.trim()) return false;
@@ -279,12 +302,23 @@ export function ExerciseForm({ initialValue, mode, onSaved, onCancel }: Props) {
                 placeholder={`Word or phrase ${index + 1}`}
                 maxLength={100}
               />
+              <PreviewButton
+                type="button"
+                onClick={() => handlePreview(index)}
+                disabled={!item.trim() || previewingIndex === index}
+                aria-label="Preview pronunciation"
+              >
+                🔊
+              </PreviewButton>
             </FieldRow>
           ))}
           <HelperText>
             Single common English words get real pronunciation audio automatically; phrases will use
-            the device's built-in voice instead.
+            the device's built-in voice instead. Use 🔊 to preview exactly what the student will
+            hear.
           </HelperText>
+          {previewFailed && <HelperText>Couldn't play a preview on this device.</HelperText>}
+          <audio {...previewAudioProps} hidden />
         </FieldList>
       )}
 

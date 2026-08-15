@@ -33,6 +33,20 @@ export const RemoveButton = styled.button`
   width: 32px;
 `;
 
+export const PreviewButton = styled.button`
+  border: none;
+  background: none;
+  font-size: ${({ theme }) => theme.fontSizes.md};
+  cursor: pointer;
+  flex-shrink: 0;
+  width: 32px;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+`;
+
 export const AddButton = styled.button`
   align-self: flex-start;
   border: 2px dashed ${({ theme }) => theme.colors.secondary};
