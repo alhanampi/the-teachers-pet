@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useReducer, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useReducer, useRef, type ReactNode } from "react";
 import type { Difficulty, Level } from "../types/exercise";
 import { recordAttempt, startSession } from "../lib/api";
 
@@ -112,6 +112,10 @@ const StudentContext = createContext<StudentContextValue | null>(null);
 
 export function StudentProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, initState);
+  // Attempts can be submitted before the session's own POST /api/session lands (fast student,
+  // slow network) — attempts.student_id has a real FK to students(id), so that insert would
+  // fail. completeExercise awaits this to guarantee the student row exists first.
+  const sessionPromiseRef = useRef<Promise<unknown> | null>(null);
 
   const submitName = useCallback((name: string) => {
     const studentId = crypto.randomUUID();
@@ -120,7 +124,7 @@ export function StudentProvider({ children }: { children: ReactNode }) {
       navigator.storage.persist().catch(() => {});
     }
     dispatch({ type: "SESSION_READY", studentId, name, points: 0 });
-    startSession(name, studentId).catch(() => {
+    sessionPromiseRef.current = startSession(name, studentId).catch(() => {
       console.warn("Could not sync the session with the server; still using localStorage.");
     });
   }, []);
@@ -138,13 +142,14 @@ export function StudentProvider({ children }: { children: ReactNode }) {
       const points = state.points + 1;
       writeStoredProgress({ studentId: state.studentId, name: state.name, points });
       dispatch({ type: "POINTS_UPDATED", points });
-      recordAttempt({
-        studentId: state.studentId,
-        exerciseId,
-        level: state.level,
-        difficulty: state.difficulty,
-        correct,
-      }).catch(() => {
+      const studentId = state.studentId;
+      const level = state.level;
+      const difficulty = state.difficulty;
+      const send = async () => {
+        if (sessionPromiseRef.current) await sessionPromiseRef.current;
+        await recordAttempt({ studentId, exerciseId, level, difficulty, correct });
+      };
+      send().catch(() => {
         console.warn("Could not sync the point with the server; saved locally.");
       });
     },

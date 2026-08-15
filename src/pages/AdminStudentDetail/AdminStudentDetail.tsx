@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchStudentAttempts, fetchStudents } from "../../lib/adminApi";
+import { usePolling } from "../../lib/usePolling";
 import type { AttemptRecord, Student } from "../../types/admin";
 import { Subtitle, Title } from "../../components/ui/Screen";
 import {
@@ -16,6 +17,7 @@ import {
 } from "./AdminStudentDetail.styles";
 
 const WEAK_THRESHOLD = 0.7;
+const POLL_INTERVAL_MS = 10000;
 
 interface GroupSummary {
   key: string;
@@ -55,7 +57,7 @@ export function AdminStudentDetail() {
   const [attempts, setAttempts] = useState<AttemptRecord[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     if (!studentId) return;
     Promise.all([fetchStudents(), fetchStudentAttempts(studentId)])
       .then(([students, studentAttempts]) => {
@@ -64,6 +66,12 @@ export function AdminStudentDetail() {
       })
       .catch(() => setError("Could not load this student's history."));
   }, [studentId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  usePolling(loadData, POLL_INTERVAL_MS);
 
   const summary = useMemo(() => (attempts ? summarizeByGroup(attempts) : []), [attempts]);
 
