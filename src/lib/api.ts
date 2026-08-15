@@ -59,3 +59,9 @@ export function recordAttempt(params: {
 export function fetchExercises(): Promise<Exercise[]> {
   return fetch("/api/exercises").then((res) => parseOrThrow<Exercise[]>(res));
 }
+
+export function fetchDictionaryAudio(word: string): Promise<{ audioUrl: string | null }> {
+  return fetch(`/api/dictionary-audio?word=${encodeURIComponent(word)}`).then((res) =>
+    parseOrThrow<{ audioUrl: string | null }>(res),
+  );
+}
