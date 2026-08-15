@@ -4,6 +4,7 @@ import { fetchDictionaryAudio } from "../../../lib/api";
 import { useAudioOrSpeech } from "../../../lib/useAudioOrSpeech";
 import type { Difficulty, Exercise, Level } from "../../../types/exercise";
 import { Button } from "../../ui/Button";
+import { HelpTooltip } from "../../ui/HelpTooltip";
 import { Input } from "../../ui/Input";
 import { Select } from "../../ui/Select";
 import {
@@ -162,6 +163,11 @@ export function ExerciseForm({ initialValue, mode, onSaved, onCancel }: Props) {
 
   return (
     <Form onSubmit={handleSubmit}>
+      <HelpTooltip title="Tips">
+        Matching pairs are plain text — type an emoji straight into a Left/Right field (like 🟥, 🟦,
+        🐶, 🍎) to get colorful or icon-based cards, no image upload needed. Emojis work anywhere:
+        prompts, options, words.
+      </HelpTooltip>
       <Row>
         <Select
           $compact
