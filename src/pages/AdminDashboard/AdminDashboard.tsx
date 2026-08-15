@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchStudents } from "../../lib/adminApi";
+import { usePolling } from "../../lib/usePolling";
 import type { Student } from "../../types/admin";
 import { Subtitle, Title } from "../../components/ui/Screen";
 import {
@@ -15,16 +16,24 @@ import {
   Points,
 } from "./AdminDashboard.styles";
 
+const POLL_INTERVAL_MS = 10000;
+
 export function AdminDashboard() {
   const [students, setStudents] = useState<Student[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  const loadStudents = useCallback(() => {
     fetchStudents()
       .then(setStudents)
       .catch(() => setError("Could not load students."));
   }, []);
+
+  useEffect(() => {
+    loadStudents();
+  }, [loadStudents]);
+
+  usePolling(loadStudents, POLL_INTERVAL_MS);
 
   const groups = useMemo(() => {
     if (!students) return [];
