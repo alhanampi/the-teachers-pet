@@ -2,6 +2,7 @@ import styled from "styled-components";
 import { pressable } from "../../../styles/interactive";
 
 export const Form = styled.form`
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.sm};
