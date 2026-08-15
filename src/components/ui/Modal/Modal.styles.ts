@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { media } from "../../../styles/theme";
+import { pressable } from "../../../styles/interactive";
 
 export const Overlay = styled.div`
   position: fixed;
@@ -57,4 +58,5 @@ export const CloseButton = styled.button`
   font-size: ${({ theme }) => theme.fontSizes.md};
   cursor: pointer;
   color: ${({ theme }) => theme.colors.text};
+  ${pressable}
 `;

@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { pressable } from "../../../styles/interactive";
 
 export const Row = styled.div`
   display: flex;
@@ -20,6 +21,7 @@ export const Chip = styled.button<{ $used?: boolean }>`
   background: ${({ theme, $used }) => ($used ? theme.colors.background : theme.colors.secondary)};
   color: ${({ theme, $used }) => ($used ? theme.colors.textLight : theme.colors.white)};
   cursor: pointer;
+  ${pressable}
 
   &:disabled {
     opacity: ${({ $used }) => ($used ? 1 : 0.5)};

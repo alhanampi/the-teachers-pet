@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { pressable } from "../../styles/interactive";
 
 export const BackButton = styled.button`
   border: none;
@@ -10,6 +11,7 @@ export const BackButton = styled.button`
   cursor: pointer;
   padding: 0;
   margin-bottom: ${({ theme }) => theme.spacing.sm};
+  ${pressable}
 `;
 
 export const SectionTitle = styled.h2`

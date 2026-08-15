@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { pressable } from "../../../styles/interactive";
 
 export type OptionState = "neutral" | "correct" | "incorrect";
 
@@ -30,6 +31,7 @@ export const OptionButton = styled.button<{ $state: OptionState }>`
         : theme.colors.white};
   color: ${({ theme, $state }) => ($state === "neutral" ? theme.colors.text : theme.colors.white)};
   cursor: pointer;
+  ${pressable}
 
   &:disabled {
     cursor: default;

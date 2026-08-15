@@ -47,7 +47,17 @@ export const Item = styled.button<{ $state: ItemState }>`
   transition:
     background 0.2s ease,
     border-color 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    transform 0.1s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: none;
+  }
 
   &:disabled {
     cursor: default;

@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { media } from "../../../styles/theme";
+import { pressable } from "../../../styles/interactive";
 
 export const Root = styled.div`
   height: 100%;
@@ -37,6 +38,7 @@ export const NavLink = styled.button<{ $active?: boolean }>`
   padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.md};
   min-height: 40px;
   cursor: pointer;
+  ${pressable}
 `;
 
 export const RightGroup = styled.div`
@@ -64,6 +66,7 @@ export const LogoutButton = styled.button`
   font-weight: 700;
   font-size: ${({ theme }) => theme.fontSizes.sm};
   cursor: pointer;
+  ${pressable}
 `;
 
 export const Content = styled.main`

@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { pressable } from "../../styles/interactive";
 
 export const LevelCard = styled.button<{ $index: number }>`
   background: ${({ theme, $index }) => theme.colors.levelColors[$index]};
@@ -12,14 +13,5 @@ export const LevelCard = styled.button<{ $index: number }>`
   padding: ${({ theme }) => theme.spacing.lg};
   cursor: pointer;
   box-shadow: 0 5px 0 rgba(0, 0, 0, 0.15);
-  transition: transform 0.1s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-  }
-
-  &:active {
-    transform: translateY(3px);
-    box-shadow: none;
-  }
+  ${pressable}
 `;
