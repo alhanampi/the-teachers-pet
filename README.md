@@ -55,8 +55,8 @@ npm run dev:api     # frontend + /api against Neon, via vercel dev (needed for /
 ```
 
 Requires a `.env.local` (not committed) with `DATABASE_URL` (Neon) and
-`NEON_AUTH_BASE_URL`/`VITE_NEON_AUTH_URL`/`ALLOWED_TEACHER_EMAILS` for teacher auth — see
-"Teacher auth" in [CLAUDE.md](CLAUDE.md).
+`VITE_CLERK_PUBLISHABLE_KEY`/`CLERK_SECRET_KEY`/`CLERK_WEBHOOK_SECRET`/`RESEND_API_KEY` for
+teacher auth — see "Teacher auth" in [CLAUDE.md](CLAUDE.md).
 
 ## Verify before committing
 

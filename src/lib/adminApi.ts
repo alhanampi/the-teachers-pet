@@ -1,6 +1,15 @@
 import type { Difficulty, Exercise, Level } from "../types/exercise";
 import type { AttemptRecord, Student } from "../types/admin";
-import { getTeacherToken } from "./auth";
+
+declare global {
+  interface Window {
+    Clerk?: {
+      session?: {
+        getToken: () => Promise<string | null>;
+      } | null;
+    };
+  }
+}
 
 async function parseOrThrow<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -11,7 +20,7 @@ async function parseOrThrow<T>(res: Response): Promise<T> {
 }
 
 async function authorizedFetch(url: string, init?: RequestInit): Promise<Response> {
-  const token = await getTeacherToken();
+  const token = await window.Clerk?.session?.getToken();
   if (!token) {
     throw new Error("Not signed in");
   }

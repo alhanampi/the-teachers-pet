@@ -1,11 +1,11 @@
+import { useAuth } from "@clerk/clerk-react";
 import { Navigate, Outlet } from "react-router-dom";
-import { useTeacher } from "../../../state/TeacherContext";
 import { Screen, Subtitle } from "../../ui/Screen";
 
 export function RequireAuth() {
-  const { status } = useTeacher();
+  const { isLoaded, isSignedIn } = useAuth();
 
-  if (status === "loading") {
+  if (!isLoaded) {
     return (
       <Screen>
         <Subtitle>Loading...</Subtitle>
@@ -13,7 +13,7 @@ export function RequireAuth() {
     );
   }
 
-  if (status === "unauthenticated") {
+  if (!isSignedIn) {
     return <Navigate to="/auth" replace />;
   }
 
