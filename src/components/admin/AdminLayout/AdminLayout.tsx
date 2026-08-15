@@ -1,25 +1,15 @@
+import { UserButton, useUser } from "@clerk/clerk-react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useTeacher } from "../../../state/TeacherContext";
-import {
-  Bar,
-  Content,
-  LogoutButton,
-  Nav,
-  NavLink,
-  RightGroup,
-  Root,
-  TeacherName,
-} from "./AdminLayout.styles";
+import { useTheme } from "styled-components";
+import { Bar, Content, Nav, NavLink, RightGroup, Root, TeacherName } from "./AdminLayout.styles";
 
 export function AdminLayout() {
-  const { teacherName, logout } = useTeacher();
+  const { user } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/auth", { replace: true });
-  };
+  const teacherName = user?.fullName || user?.primaryEmailAddress?.emailAddress || null;
 
   return (
     <Root>
@@ -42,9 +32,14 @@ export function AdminLayout() {
         </Nav>
         <RightGroup>
           {teacherName && <TeacherName>{teacherName}</TeacherName>}
-          <LogoutButton type="button" onClick={handleLogout}>
-            Log out
-          </LogoutButton>
+          <UserButton
+            appearance={{
+              variables: {
+                colorPrimary: theme.colors.primary,
+                fontFamily: theme.fonts.body,
+              },
+            }}
+          />
         </RightGroup>
       </Bar>
       <Content>

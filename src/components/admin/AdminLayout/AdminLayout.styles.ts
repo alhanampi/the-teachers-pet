@@ -58,17 +58,6 @@ export const TeacherName = styled.span`
   }
 `;
 
-export const LogoutButton = styled.button`
-  border: none;
-  background: none;
-  color: ${({ theme }) => theme.colors.textLight};
-  font-family: ${({ theme }) => theme.fonts.body};
-  font-weight: 700;
-  font-size: ${({ theme }) => theme.fontSizes.sm};
-  cursor: pointer;
-  ${pressable}
-`;
-
 export const Content = styled.main`
   flex: 1 1 auto;
   overflow-y: auto;

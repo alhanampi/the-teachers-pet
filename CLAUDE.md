@@ -9,8 +9,9 @@ completed.
 **Phase 2 in progress: teacher dashboard.** The student still goes through their flow at `/`,
 with no login. There's also a teacher dashboard behind auth: `/auth` (login),
 `/admin/dashboard` (students + history) and `/admin/exercises` (exercise manager). The
-backoffice uses **Neon Auth** (not Clerk — see "Teacher auth"). Student login/signup still
-doesn't exist, by design: students don't have accounts.
+backoffice uses **Clerk** for auth (see "Teacher auth") — any teacher can create their own
+account (Google or email/password); there's no allowlist, but every signup sends a notification
+email. Student login/signup still doesn't exist, by design: students don't have accounts.
 
 ## Stack
 
@@ -19,7 +20,10 @@ doesn't exist, by design: students don't have accounts.
   headless/unstyled a11y primitives are fine when styled entirely with styled-components, e.g.
   `@radix-ui/react-dialog`/`@radix-ui/react-alert-dialog` for `Modal`/`ConfirmDialog` (focus
   trap, Escape-to-close, portal, ARIA roles come from Radix; all visuals come from our own
-  `.styles.ts` files).
+  `.styles.ts` files). Deliberate, scoped exception: `/auth` and the account menu in
+  `AdminLayout` use **Clerk's own prebuilt components** (`<SignIn>`, `<UserButton>`), themed via
+  their `appearance` prop rather than styled-components — see "Teacher auth". Nowhere else in
+  the app uses pre-styled UI.
 - **PWA, mobile-first.** The app installs as a PWA (manifest + service worker via
   `vite-plugin-pwa`). All design is thought out for phone/tablet first: base styles with no
   media query = mobile, and `min-width` media queries (breakpoints in `src/styles/theme.ts`) get
@@ -65,7 +69,8 @@ doesn't exist, by design: students don't have accounts.
 api/
   _db.ts              Neon connection helper (CREATE TABLE/ALTER TABLE IF NOT EXISTS included)
   _validate.ts        shared validators (level, difficulty, exercise type, uuid, lengths...)
-  _auth.ts             requireTeacher(req): verifies the Neon Auth JWT + email allowlist
+  _auth.ts             requireTeacher(req): verifies the Clerk session token (@clerk/backend)
+  clerk-webhook.ts     POST — Clerk `user.created` webhook, emails a signup notification (Resend)
   session.ts          POST — creates/retrieves a student
   attempts.ts          POST — records an attempt (with `correct`), adds a point
   progress.ts          GET  — a student's current points
@@ -103,12 +108,11 @@ src/
     ui/                  Button, Card, Select, Input, Modal, FloatingButton, etc.
   state/
     StudentContext.tsx
-    TeacherContext.tsx  teacher session (Neon Auth), separate from StudentContext
     ThemeContext.tsx    active color theme + picker, persisted in localStorage
   lib/
     api.ts               public fetch wrappers to /api/* (session, attempts, exercise catalog)
-    adminApi.ts           protected fetch wrappers (students, student-attempts, create exercise)
-    auth.ts               Neon Auth authClient + getTeacherToken()
+    adminApi.ts           protected fetch wrappers (students, student-attempts, create exercise);
+                          gets its Clerk session token via window.Clerk?.session?.getToken()
   types/
     exercise.ts
     admin.ts              Student, AttemptRecord
@@ -177,23 +181,36 @@ login was added, on purpose):
   to its own `/admin/dashboard/:studentId` detail page. This is a client-side-only computation
   over the existing `GET /api/students` response — no backend changes.
 
-## Teacher auth (Neon Auth)
+## Teacher auth (Clerk)
 
-- The backoffice uses **Neon Auth** (Neon's Managed Better Auth), not Clerk. Already enabled on
-  the Neon project; `NEON_AUTH_BASE_URL`/`VITE_NEON_AUTH_URL` live in `.env.local`.
-- Client: `src/lib/auth.ts` exposes `authClient` (`createAuthClient` from
-  `@neondatabase/neon-js/auth`) and `getTeacherToken()`, which requests a fresh JWT from
-  `${VITE_NEON_AUTH_URL}/token` (with `credentials: "include"`, the session travels via
-  cross-site cookie). The JWT lives ~15 minutes — it's not cached in state, it's requested again
-  on every protected request (`src/lib/adminApi.ts`).
+- The backoffice uses **Clerk**, not Neon Auth. Sign-up is **open** — any teacher can create
+  their own account (Google or email/password) via Clerk's own `<SignIn>` widget at `/auth`
+  (`src/pages/Auth/Auth.tsx`) — there's no allowlist gating access. Every new signup triggers a
+  notification email (see below), which is the only "who signed up" visibility, by design.
+- Client: `src/main.tsx` wraps the app in `<ClerkProvider publishableKey={...}>`
+  (`VITE_CLERK_PUBLISHABLE_KEY`). There's no custom teacher-auth context —
+  `RequireAuth.tsx`/`AdminLayout.tsx` use Clerk's own `useAuth()`/`useUser()` hooks directly.
+  `src/lib/adminApi.ts`'s `authorizedFetch` gets a fresh session token via
+  `window.Clerk?.session?.getToken()` (Clerk's documented pattern for non-component code) on
+  every protected request.
 - Server: `api/_auth.ts` exports `requireTeacher(req)`, which validates the
-  `Authorization: Bearer` header against Neon Auth's JWKS (`jose`) and also checks the email
-  against `ALLOWED_TEACHER_EMAILS` (env var, comma-separated list). **Neon Auth has no admin
-  panel to restrict who can sign up** (anyone can hit the public sign-up endpoint) — that's why
-  this allowlist is the real barrier, not the UI. The app never shows a sign-up screen; teacher
-  accounts are created by hand (Neon CLI or Better Auth's REST API).
-- `ALLOWED_TEACHER_EMAILS` needs to exist both in `.env.local` **and** registered on the Vercel
-  project (`vercel env add ...`) — `vercel dev` only injects into functions the env vars the
+  `Authorization: Bearer` header via `@clerk/backend`'s `verifyToken` (`CLERK_SECRET_KEY`) — no
+  allowlist check. The email claim requires a custom Clerk session-token claim configured once
+  in the Clerk Dashboard (Sessions → Customize session token:
+  `{"email": "{{user.primary_email_address}}"}`), so it's available without an extra Clerk API
+  call per request.
+- `api/clerk-webhook.ts` receives Clerk's `user.created` webhook (signature verified with
+  `svix`, `CLERK_WEBHOOK_SECRET`), then emails a notification via Resend (`RESEND_API_KEY`) to
+  `NOTIFY_TEACHER_SIGNUP_EMAIL` (defaults to `alhanampi@gmail.com`) — the endpoint must be
+  registered once in the Clerk Dashboard (Webhooks → add endpoint →
+  `https://<deployed-domain>/api/clerk-webhook`, subscribed to `user.created`).
+- `<SignIn>` (login) and `<UserButton>` (account menu in `AdminLayout` — sign-out, connected
+  accounts, password change) are Clerk's own prebuilt components, themed via their `appearance`
+  prop — see the "Stack" section's note on this scoped exception to the no-pre-styled-UI rule.
+- All Clerk/Resend env vars (`VITE_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`,
+  `CLERK_WEBHOOK_SECRET`, `RESEND_API_KEY`, `NOTIFY_TEACHER_SIGNUP_EMAIL`) need to exist both in
+  `.env.local` **and** registered on the Vercel project (`vercel env add ...`) for every
+  environment that needs them — `vercel dev` only injects into functions the env vars the
   project has declared, not whatever happens to be in `.env.local`.
 
 ## `/api` contract
@@ -375,8 +392,8 @@ useful in CI).
   student's round if level/difficulty match; in `/admin/dashboard` open a student and confirm
   the history and the "where to improve" summary match the attempts made.
 - Requires `DATABASE_URL` in `.env.local` (Neon connection string, not committed), plus
-  `NEON_AUTH_BASE_URL`/`VITE_NEON_AUTH_URL` and `ALLOWED_TEACHER_EMAILS` (the latter also
-  registered on the Vercel project, not just in `.env.local` — see "Teacher auth").
+  `VITE_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`, `RESEND_API_KEY` (all
+  also registered on the Vercel project, not just in `.env.local` — see "Teacher auth").
 
 ## Out of scope for now
 

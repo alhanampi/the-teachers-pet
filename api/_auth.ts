@@ -1,20 +1,10 @@
 import type { VercelRequest } from "@vercel/node";
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import { verifyToken } from "@clerk/backend";
 
-const authBaseUrl = process.env.NEON_AUTH_BASE_URL;
+const secretKey = process.env.CLERK_SECRET_KEY;
 
-if (!authBaseUrl) {
-  throw new Error("NEON_AUTH_BASE_URL is not set");
-}
-
-const jwks = createRemoteJWKSet(new URL(`${authBaseUrl}/.well-known/jwks.json`));
-const issuer = new URL(authBaseUrl).origin;
-
-function allowedTeacherEmails(): string[] {
-  return (process.env.ALLOWED_TEACHER_EMAILS ?? "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
+if (!secretKey) {
+  throw new Error("CLERK_SECRET_KEY is not set");
 }
 
 export interface Teacher {
@@ -28,11 +18,13 @@ export async function requireTeacher(req: VercelRequest): Promise<Teacher | null
   const token = header.slice("Bearer ".length);
 
   try {
-    const { payload } = await jwtVerify(token, jwks, { issuer });
+    // authorizedParties intentionally omitted: it would require keeping every deployed
+    // domain (production + every preview URL) registered up front, the same trap that broke
+    // Neon Auth logins on freshly deployed URLs previously.
+    const payload = (await verifyToken(token, { secretKey })) as Record<string, unknown>;
     const email = typeof payload.email === "string" ? payload.email.toLowerCase() : null;
     const id = typeof payload.sub === "string" ? payload.sub : null;
     if (!email || !id) return null;
-    if (!allowedTeacherEmails().includes(email)) return null;
     return { id, email };
   } catch {
     return null;
