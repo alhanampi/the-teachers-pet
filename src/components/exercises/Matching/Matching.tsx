@@ -16,11 +16,18 @@ interface Props {
   disabled?: boolean;
 }
 
+type Side = "left" | "right";
+
 const WRONG_FLASH_MS = 1200;
 const DRAG_THRESHOLD_PX = 6;
 
+interface Selected {
+  side: Side;
+  value: string;
+}
+
 interface DragState {
-  side: "left" | "right";
+  side: Side;
   value: string;
   startX: number;
   startY: number;
@@ -32,10 +39,10 @@ export function Matching({ exercise, onComplete, disabled }: Props) {
     () => shuffleArray(exercise.pairs.map((pair) => pair.right)),
     [exercise.pairs],
   );
-  const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Selected | null>(null);
   const [matched, setMatched] = useState<Record<string, string>>({});
   const [wrongPair, setWrongPair] = useState<{ left: string; right: string } | null>(null);
-  const [dragging, setDragging] = useState<{ side: "left" | "right"; value: string } | null>(null);
+  const [dragging, setDragging] = useState<{ side: Side; value: string } | null>(null);
   const [dragPosition, setDragPosition] = useState<{ x: number; y: number } | null>(null);
 
   const dragRef = useRef<DragState | null>(null);
@@ -53,43 +60,42 @@ export function Matching({ exercise, onComplete, disabled }: Props) {
     const pair = exercise.pairs.find((candidate) => candidate.left === left);
     if (pair?.right === right) {
       setMatched((prev) => ({ ...prev, [left]: right }));
-      setSelectedLeft(null);
+      setSelected(null);
       return;
     }
 
     setWrongPair({ left, right });
-    setSelectedLeft(null);
+    setSelected(null);
     setTimeout(() => setWrongPair(null), WRONG_FLASH_MS);
   };
 
-  const pickLeft = (left: string) => {
+  const pick = (side: Side, value: string) => {
     if (justDraggedRef.current) {
       justDraggedRef.current = false;
       return;
     }
-    if (disabled || isDone || matched[left]) return;
-    setSelectedLeft(left);
-  };
+    if (disabled || isDone) return;
+    if (side === "left" ? matched[value] : matchedRights.has(value)) return;
 
-  const pickRight = (right: string) => {
-    if (justDraggedRef.current) {
-      justDraggedRef.current = false;
+    if (!selected || selected.side === side) {
+      setSelected({ side, value });
       return;
     }
-    if (disabled || isDone || !selectedLeft) return;
-    attemptMatch(selectedLeft, right);
+
+    const left = side === "left" ? value : selected.value;
+    const right = side === "right" ? value : selected.value;
+    attemptMatch(left, right);
   };
 
   const handlePointerDown = (
     e: ReactPointerEvent<HTMLButtonElement>,
-    side: "left" | "right",
+    side: Side,
     value: string,
   ) => {
     if (disabled || isDone) return;
     if (side === "left" ? matched[value] : matchedRights.has(value)) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     dragRef.current = { side, value, startX: e.clientX, startY: e.clientY, moved: false };
-    if (side === "left") setSelectedLeft(value);
   };
 
   const handlePointerMove = (e: ReactPointerEvent<HTMLButtonElement>) => {
@@ -111,20 +117,21 @@ export function Matching({ exercise, onComplete, disabled }: Props) {
     if (drag.moved) {
       justDraggedRef.current = true;
       const target = document.elementFromPoint(e.clientX, e.clientY);
-      if (drag.side === "left") {
-        const rightEl = target?.closest<HTMLElement>("[data-right]");
-        const right = rightEl?.dataset.right;
-        if (right && !matchedRights.has(right)) {
-          attemptMatch(drag.value, right);
-        } else {
-          setSelectedLeft(null);
-        }
+      const targetSelector = drag.side === "left" ? "[data-right]" : "[data-left]";
+      const targetEl = target?.closest<HTMLElement>(targetSelector);
+      const targetValue = drag.side === "left" ? targetEl?.dataset.right : targetEl?.dataset.left;
+      const targetTaken = targetValue
+        ? drag.side === "left"
+          ? matchedRights.has(targetValue)
+          : !!matched[targetValue]
+        : false;
+
+      if (targetValue && !targetTaken) {
+        const left = drag.side === "left" ? drag.value : targetValue;
+        const right = drag.side === "left" ? targetValue : drag.value;
+        attemptMatch(left, right);
       } else {
-        const leftEl = target?.closest<HTMLElement>("[data-left]");
-        const left = leftEl?.dataset.left;
-        if (left && !matched[left]) {
-          attemptMatch(left, drag.value);
-        }
+        setSelected(null);
       }
     }
     setDragging(null);
@@ -148,12 +155,12 @@ export function Matching({ exercise, onComplete, disabled }: Props) {
                   ? "matched"
                   : wrongPair?.left === pair.left
                     ? "wrong"
-                    : selectedLeft === pair.left
+                    : selected?.side === "left" && selected.value === pair.left
                       ? "selected"
                       : "neutral"
               }
               disabled={disabled || isDone || !!matched[pair.left]}
-              onClick={() => pickLeft(pair.left)}
+              onClick={() => pick("left", pair.left)}
               onPointerDown={(e) => handlePointerDown(e, "left", pair.left)}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
@@ -174,10 +181,12 @@ export function Matching({ exercise, onComplete, disabled }: Props) {
                   ? "matched"
                   : wrongPair?.right === right
                     ? "wrong"
-                    : "neutral"
+                    : selected?.side === "right" && selected.value === right
+                      ? "selected"
+                      : "neutral"
               }
               disabled={disabled || isDone || matchedRights.has(right)}
-              onClick={() => pickRight(right)}
+              onClick={() => pick("right", right)}
               onPointerDown={(e) => handlePointerDown(e, "right", right)}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
