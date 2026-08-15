@@ -78,6 +78,7 @@ export function ExerciseForm({ initialValue, mode, onSaved, onCancel }: Props) {
   const {
     play: playPreview,
     failed: previewFailed,
+    failureReason: previewFailureReason,
     audioProps: previewAudioProps,
   } = useAudioOrSpeech();
 
@@ -323,7 +324,13 @@ export function ExerciseForm({ initialValue, mode, onSaved, onCancel }: Props) {
             the device's built-in voice instead. Use 🔊 to preview exactly what the student will
             hear.
           </HelperText>
-          {previewFailed && <HelperText>Couldn't play a preview on this device.</HelperText>}
+          {previewFailed && (
+            <HelperText>
+              {previewFailureReason === "no-english-voice"
+                ? "This browser/device doesn't have an English voice installed, so phrases would fall back silently for students in the same situation."
+                : "Couldn't play a preview on this device."}
+            </HelperText>
+          )}
           <audio {...previewAudioProps} hidden />
         </FieldList>
       )}
