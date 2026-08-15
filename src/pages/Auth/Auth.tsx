@@ -19,6 +19,7 @@ export function Auth() {
       <AuthWrapper>
         <SignIn
           routing="virtual"
+          forceRedirectUrl="/admin/dashboard"
           appearance={{
             variables: {
               colorPrimary: theme.colors.primary,
