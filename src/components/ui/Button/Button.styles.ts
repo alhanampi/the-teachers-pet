@@ -1,4 +1,5 @@
 import styled, { css } from "styled-components";
+import { pressable } from "../../../styles/interactive";
 
 export type ButtonVariant = "primary" | "secondary" | "success";
 
@@ -28,16 +29,7 @@ export const StyledButton = styled.button<{ $variant?: ButtonVariant }>`
   min-height: 44px;
   padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.xl};
   cursor: pointer;
-  transition: transform 0.1s ease;
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(3px);
-    box-shadow: none;
-  }
+  ${pressable}
 
   &:disabled {
     opacity: 0.5;

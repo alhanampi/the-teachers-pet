@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { media } from "../../../styles/theme";
+import { pressable } from "../../../styles/interactive";
 
 export const Bar = styled.header`
   position: fixed;
@@ -39,6 +40,7 @@ export const BackButton = styled.button`
   font-size: ${({ theme }) => theme.fontSizes.md};
   line-height: 1;
   cursor: pointer;
+  ${pressable}
 `;
 
 export const Logo = styled.button`
@@ -55,6 +57,7 @@ export const Logo = styled.button`
   color: ${({ theme }) => theme.colors.primaryDark};
   white-space: nowrap;
   cursor: pointer;
+  ${pressable}
 `;
 
 export const LogoIcon = styled.img`

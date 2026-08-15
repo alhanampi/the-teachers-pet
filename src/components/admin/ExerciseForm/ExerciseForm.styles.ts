@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { pressable } from "../../../styles/interactive";
 
 export const Form = styled.form`
   display: flex;
@@ -31,6 +32,7 @@ export const RemoveButton = styled.button`
   cursor: pointer;
   flex-shrink: 0;
   width: 32px;
+  ${pressable}
 `;
 
 export const PreviewButton = styled.button`
@@ -40,6 +42,7 @@ export const PreviewButton = styled.button`
   cursor: pointer;
   flex-shrink: 0;
   width: 32px;
+  ${pressable}
 
   &:disabled {
     opacity: 0.4;
@@ -58,6 +61,7 @@ export const AddButton = styled.button`
   font-size: ${({ theme }) => theme.fontSizes.sm};
   padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.md};
   cursor: pointer;
+  ${pressable}
 `;
 
 export const ErrorMessage = styled.p`

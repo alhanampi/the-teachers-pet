@@ -1,5 +1,6 @@
 import { Navigate, Route, BrowserRouter, Routes } from "react-router-dom";
 import { useViewportHeightSync } from "./lib/useViewportHeightSync";
+import { useButtonClickSound } from "./lib/sound";
 import { RequireAuth } from "./components/admin/RequireAuth";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { StudentFlow } from "./pages/StudentFlow";
@@ -10,6 +11,7 @@ import { AdminExercises } from "./pages/AdminExercises";
 
 export function App() {
   useViewportHeightSync();
+  useButtonClickSound();
 
   return (
     <BrowserRouter>

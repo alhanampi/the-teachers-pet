@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { pressable } from "../../styles/interactive";
 
 export const DifficultyCard = styled.button`
   background: ${({ theme }) => theme.colors.secondary};
@@ -12,20 +13,11 @@ export const DifficultyCard = styled.button`
   padding: ${({ theme }) => theme.spacing.lg};
   cursor: pointer;
   box-shadow: 0 5px 0 ${({ theme }) => theme.colors.secondaryDark};
-  transition: transform 0.1s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.xs};
-
-  &:hover {
-    transform: translateY(-2px);
-  }
-
-  &:active {
-    transform: translateY(3px);
-    box-shadow: none;
-  }
+  ${pressable}
 `;
 
 export const Emoji = styled.span`

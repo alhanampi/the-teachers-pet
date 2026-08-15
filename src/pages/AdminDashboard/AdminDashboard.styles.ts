@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { pressable } from "../../styles/interactive";
 
 export const List = styled.ul`
   display: flex;
@@ -22,6 +23,7 @@ export const ListItem = styled.button`
   min-height: 44px;
   cursor: pointer;
   text-align: left;
+  ${pressable}
 `;
 
 export const Name = styled.span`

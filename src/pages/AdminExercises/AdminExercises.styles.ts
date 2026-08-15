@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { media } from "../../styles/theme";
+import { pressable } from "../../styles/interactive";
 
 export const Filters = styled.div`
   display: flex;
@@ -80,6 +81,7 @@ export const ActionButton = styled.button<{ $tone?: "danger" }>`
   background: none;
   color: ${({ theme, $tone }) => ($tone === "danger" ? theme.colors.error : theme.colors.secondaryDark)};
   cursor: pointer;
+  ${pressable}
 
   &:hover {
     background: ${({ theme, $tone }) =>
