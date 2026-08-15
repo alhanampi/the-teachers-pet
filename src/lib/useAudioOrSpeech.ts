@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { findEnglishVoice } from "./speechSupport";
 
 const RETRY_AFTER_MS = 700;
 const FALLBACK_TIMEOUT_MS = 1800;
@@ -13,13 +14,6 @@ export interface PlayableItem {
 
 function normalizeAudioUrl(url: string): string {
   return url.startsWith("//") ? `https:${url}` : url;
-}
-
-function findEnglishVoice(): SpeechSynthesisVoice | null {
-  return (
-    window.speechSynthesis.getVoices().find((voice) => voice.lang.toLowerCase().startsWith("en")) ??
-    null
-  );
 }
 
 export function useAudioOrSpeech() {
