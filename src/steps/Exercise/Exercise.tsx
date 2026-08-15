@@ -11,9 +11,18 @@ import { WordOrder } from "../../components/exercises/WordOrder";
 import { Listening } from "../../components/exercises/Listening";
 import { fetchExercises } from "../../lib/api";
 import { shuffleArray } from "../../lib/shuffle";
+import { detectEnglishSpeechSupport } from "../../lib/speechSupport";
 import { Actions, Feedback } from "./Exercise.styles";
 
 const ROUND_SIZE = 5;
+
+function canPlayInRound(exercise: ExerciseType, speechSupported: boolean): boolean {
+  if (exercise.type !== "listening") return true;
+  if (speechSupported) return true;
+  // Items with real dictionary audio don't need speech synthesis at all, so an exercise
+  // only depends on device TTS support if at least one item is missing it.
+  return exercise.items.every((item) => item.audioUrl !== null);
+}
 
 function renderExercise(
   exercise: ExerciseType,
@@ -74,6 +83,7 @@ export function Exercise() {
   const { level, difficulty, completeExercise, finishExercises } = useStudent();
 
   const [exercises, setExercises] = useState<ExerciseType[] | null>(null);
+  const [speechSupported, setSpeechSupported] = useState<boolean | null>(null);
 
   useEffect(() => {
     fetchExercises()
@@ -81,20 +91,27 @@ export function Exercise() {
       .catch(() => setExercises([]));
   }, []);
 
+  useEffect(() => {
+    detectEnglishSpeechSupport().then(setSpeechSupported);
+  }, []);
+
   const pool = useMemo(() => {
-    if (!exercises) return [];
+    if (!exercises || speechSupported === null) return [];
     const matching = exercises.filter(
-      (exercise) => exercise.level === level && exercise.difficulty === difficulty,
+      (exercise) =>
+        exercise.level === level &&
+        exercise.difficulty === difficulty &&
+        canPlayInRound(exercise, speechSupported),
     );
     return shuffleArray(matching).slice(0, ROUND_SIZE);
-  }, [exercises, level, difficulty]);
+  }, [exercises, level, difficulty, speechSupported]);
 
   const [index, setIndex] = useState(0);
   const [attempt, setAttempt] = useState(0);
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [pointAwarded, setPointAwarded] = useState(false);
 
-  if (!exercises) {
+  if (!exercises || speechSupported === null) {
     return (
       <Screen>
         <Subtitle>Loading exercises...</Subtitle>

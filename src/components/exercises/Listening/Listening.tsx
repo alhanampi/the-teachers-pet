@@ -18,7 +18,7 @@ export function Listening({ exercise, onComplete, disabled }: Props) {
   const order = useMemo(() => shuffleArray(exercise.items), [exercise.items]);
   const [matched, setMatched] = useState<Set<string>>(new Set());
   const [wrongTile, setWrongTile] = useState<string | null>(null);
-  const { play, failed, audioProps } = useAudioOrSpeech();
+  const { play, failed, failureReason, audioProps } = useAudioOrSpeech();
 
   const isDone = matched.size === exercise.items.length;
   const current = order.find((item) => !matched.has(item.text)) ?? null;
@@ -51,7 +51,9 @@ export function Listening({ exercise, onComplete, disabled }: Props) {
         </PlayButton>
         {failed && (
           <FallbackMessage>
-            Audio isn't available on this device right now. Ask a grown-up for help! 🙋
+            {failureReason === "no-english-voice"
+              ? "This phone doesn't have an English voice installed. Ask a grown-up to add one in Settings! 🙋"
+              : "Audio isn't available on this device right now. Ask a grown-up for help! 🙋"}
           </FallbackMessage>
         )}
       </PlayWrapper>
