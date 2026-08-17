@@ -19,7 +19,7 @@ import {
 type PendingNav = "back" | "home" | null;
 
 export function Header() {
-  const { step, name, points, goBack, changeName } = useStudent();
+  const { step, name, points, goBack, signOut } = useStudent();
   const { themeId, setThemeId } = useAppTheme();
   const [pendingNav, setPendingNav] = useState<PendingNav>(null);
 
@@ -27,11 +27,10 @@ export function Header() {
     setThemeId(event.target.value);
   };
 
-  const canGoBack = step === "level" || step === "difficulty" || step === "exercise";
+  const canGoBack = step === "difficulty" || step === "exercise";
 
   const handleBack = () => {
-    const needsConfirm = step === "exercise" || (step === "level" && points > 0);
-    if (needsConfirm) {
+    if (step === "exercise") {
       setPendingNav("back");
     } else {
       goBack();
@@ -39,18 +38,17 @@ export function Header() {
   };
 
   const handleLogoClick = () => {
-    if (step === "welcome") return;
     const needsConfirm = step === "exercise" || points > 0;
     if (needsConfirm) {
       setPendingNav("home");
     } else {
-      changeName();
+      signOut();
     }
   };
 
   const confirmPendingNav = () => {
     if (pendingNav === "back") goBack();
-    if (pendingNav === "home") changeName();
+    if (pendingNav === "home") signOut();
     setPendingNav(null);
   };
 
@@ -62,14 +60,14 @@ export function Header() {
             ←
           </BackButton>
         )}
-        <Logo type="button" onClick={handleLogoClick} aria-label="Go to home screen">
+        <Logo type="button" onClick={handleLogoClick} aria-label="Sign out">
           <LogoIcon src="/icons/apple.svg" alt="" />
           <LogoText>Teacher's Pet</LogoText>
         </Logo>
-        {step !== "welcome" && <Greeting>Hi {name}!</Greeting>}
+        {step !== "onboarding" && <Greeting>Hi {name}!</Greeting>}
       </LeftGroup>
       <Controls>
-        {step !== "welcome" && (
+        {step !== "onboarding" && (
           <PointsPill>
             <span role="img" aria-label="star">
               ⭐

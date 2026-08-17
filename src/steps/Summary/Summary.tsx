@@ -5,7 +5,7 @@ import { Screen, Subtitle, Title } from "../../components/ui/Screen";
 import { Actions, Stars } from "./Summary.styles";
 
 export function Summary() {
-  const { name, points, playAgain, changeName } = useStudent();
+  const { name, points, playAgain, signOut } = useStudent();
 
   return (
     <Screen>
@@ -17,8 +17,8 @@ export function Summary() {
         <Subtitle>You have {points} points in total</Subtitle>
         <Actions>
           <Button onClick={playAgain}>Play again</Button>
-          <Button $variant="secondary" onClick={changeName}>
-            Change name
+          <Button $variant="secondary" onClick={signOut}>
+            Log out
           </Button>
         </Actions>
       </Card>

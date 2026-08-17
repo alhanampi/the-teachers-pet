@@ -1,32 +1,50 @@
-import { createContext, useCallback, useContext, useReducer, useRef, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useReducer,
+  type ReactNode,
+} from "react";
+import { useClerk } from "@clerk/clerk-react";
 import type { Difficulty, Level } from "../types/exercise";
-import { recordAttempt, startSession } from "../lib/api";
+import { recordAttempt } from "../lib/api";
+import { chooseTeacher, startSession } from "../lib/studentApi";
+import { Screen, Subtitle } from "../components/ui/Screen";
 
-export type Step = "welcome" | "level" | "difficulty" | "exercise" | "summary";
+export type Step = "onboarding" | "level" | "difficulty" | "exercise" | "summary";
 
 interface StudentState {
   step: Step;
   studentId: string | null;
   name: string;
+  teacherId: string | null;
   points: number;
   level: Level | null;
   difficulty: Difficulty | null;
 }
 
 type Action =
-  | { type: "SESSION_READY"; studentId: string; name: string; points: number }
+  | {
+      type: "SESSION_READY";
+      studentId: string;
+      name: string;
+      points: number;
+      teacherId: string | null;
+    }
+  | { type: "ONBOARDING_COMPLETE"; teacherId: string }
   | { type: "SELECT_LEVEL"; level: Level }
   | { type: "SELECT_DIFFICULTY"; difficulty: Difficulty }
   | { type: "POINTS_UPDATED"; points: number }
   | { type: "FINISH_EXERCISES" }
   | { type: "PLAY_AGAIN" }
-  | { type: "RESTART" }
   | { type: "GO_BACK" };
 
 const initialState: StudentState = {
-  step: "welcome",
+  step: "onboarding",
   studentId: null,
   name: "",
+  teacherId: null,
   points: 0,
   level: null,
   difficulty: null,
@@ -37,11 +55,14 @@ function reducer(state: StudentState, action: Action): StudentState {
     case "SESSION_READY":
       return {
         ...state,
-        step: "level",
+        step: action.teacherId ? "level" : "onboarding",
         studentId: action.studentId,
         name: action.name,
         points: action.points,
+        teacherId: action.teacherId,
       };
+    case "ONBOARDING_COMPLETE":
+      return { ...state, step: "level", teacherId: action.teacherId };
     case "SELECT_LEVEL":
       return { ...state, level: action.level, step: "difficulty" };
     case "SELECT_DIFFICULTY":
@@ -52,8 +73,6 @@ function reducer(state: StudentState, action: Action): StudentState {
       return { ...state, step: "summary" };
     case "PLAY_AGAIN":
       return { ...state, step: "level", level: null, difficulty: null };
-    case "RESTART":
-      return { ...initialState };
     case "GO_BACK":
       if (state.step === "difficulty") return { ...state, step: "level" };
       if (state.step === "exercise") return { ...state, step: "difficulty" };
@@ -63,70 +82,36 @@ function reducer(state: StudentState, action: Action): StudentState {
   }
 }
 
-const STORAGE_KEY = "englishApp.progress";
-
-interface StoredProgress {
-  studentId: string;
-  name: string;
-  points: number;
-}
-
-function readStoredProgress(): StoredProgress | null {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as StoredProgress;
-  } catch {
-    return null;
-  }
-}
-
-function writeStoredProgress(progress: StoredProgress) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-}
-
-function initState(): StudentState {
-  const stored = readStoredProgress();
-  if (!stored) return initialState;
-  return {
-    ...initialState,
-    step: "level",
-    studentId: stored.studentId,
-    name: stored.name,
-    points: stored.points,
-  };
-}
-
 interface StudentContextValue extends StudentState {
-  submitName: (name: string) => void;
   selectLevel: (level: Level) => void;
   selectDifficulty: (difficulty: Difficulty) => void;
   completeExercise: (exerciseId: string, correct: boolean) => void;
   finishExercises: () => void;
   playAgain: () => void;
-  changeName: () => void;
+  completeOnboarding: (teacherId: string) => Promise<void>;
   goBack: () => void;
+  signOut: () => void;
 }
 
 const StudentContext = createContext<StudentContextValue | null>(null);
 
 export function StudentProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, undefined, initState);
-  // Attempts can be submitted before the session's own POST /api/session lands (fast student,
-  // slow network) — attempts.student_id has a real FK to students(id), so that insert would
-  // fail. completeExercise awaits this to guarantee the student row exists first.
-  const sessionPromiseRef = useRef<Promise<unknown> | null>(null);
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const { signOut: clerkSignOut } = useClerk();
 
-  const submitName = useCallback((name: string) => {
-    const studentId = crypto.randomUUID();
-    writeStoredProgress({ studentId, name, points: 0 });
-    if (navigator.storage?.persist) {
-      navigator.storage.persist().catch(() => {});
-    }
-    dispatch({ type: "SESSION_READY", studentId, name, points: 0 });
-    sessionPromiseRef.current = startSession(name, studentId).catch(() => {
-      console.warn("Could not sync the session with the server; still using localStorage.");
-    });
+  useEffect(() => {
+    startSession()
+      .then(({ studentId, name, points, teacherId }) =>
+        dispatch({ type: "SESSION_READY", studentId, name, points, teacherId }),
+      )
+      .catch(() => {
+        console.warn("Could not start the session.");
+      });
+  }, []);
+
+  const completeOnboarding = useCallback(async (teacherId: string) => {
+    const result = await chooseTeacher(teacherId);
+    dispatch({ type: "ONBOARDING_COMPLETE", teacherId: result.teacherId ?? teacherId });
   }, []);
 
   const selectLevel = useCallback((level: Level) => dispatch({ type: "SELECT_LEVEL", level }), []);
@@ -140,47 +125,45 @@ export function StudentProvider({ children }: { children: ReactNode }) {
     (exerciseId: string, correct: boolean) => {
       if (!state.studentId || !state.level || !state.difficulty) return;
       const points = state.points + 1;
-      writeStoredProgress({ studentId: state.studentId, name: state.name, points });
       dispatch({ type: "POINTS_UPDATED", points });
-      const studentId = state.studentId;
-      const level = state.level;
-      const difficulty = state.difficulty;
-      const send = async () => {
-        if (sessionPromiseRef.current) await sessionPromiseRef.current;
-        await recordAttempt({ studentId, exerciseId, level, difficulty, correct });
-      };
-      send().catch(() => {
+      recordAttempt({
+        studentId: state.studentId,
+        exerciseId,
+        level: state.level,
+        difficulty: state.difficulty,
+        correct,
+      }).catch(() => {
         console.warn("Could not sync the point with the server; saved locally.");
       });
     },
-    [state.studentId, state.name, state.level, state.difficulty, state.points],
+    [state.studentId, state.level, state.difficulty, state.points],
   );
 
   const finishExercises = useCallback(() => dispatch({ type: "FINISH_EXERCISES" }), []);
   const playAgain = useCallback(() => dispatch({ type: "PLAY_AGAIN" }), []);
-  const changeName = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
-    dispatch({ type: "RESTART" });
-  }, []);
+  const goBack = useCallback(() => dispatch({ type: "GO_BACK" }), []);
+  const signOut = useCallback(() => {
+    void clerkSignOut();
+  }, [clerkSignOut]);
 
-  const goBack = useCallback(() => {
-    if (state.step === "level") {
-      changeName();
-      return;
-    }
-    dispatch({ type: "GO_BACK" });
-  }, [state.step, changeName]);
+  if (!state.studentId) {
+    return (
+      <Screen>
+        <Subtitle>Loading...</Subtitle>
+      </Screen>
+    );
+  }
 
   const value: StudentContextValue = {
     ...state,
-    submitName,
     selectLevel,
     selectDifficulty,
     completeExercise,
     finishExercises,
     playAgain,
-    changeName,
+    completeOnboarding,
     goBack,
+    signOut,
   };
 
   return <StudentContext.Provider value={value}>{children}</StudentContext.Provider>;
