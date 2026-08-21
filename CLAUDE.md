@@ -240,8 +240,8 @@ prompt, hint?, options?, answer?, pairs?, words? }` depending on `type` (word-or
 
 ## Security
 
-Fixed rules for anything that touches `/api` or student input. These aren't just for this
-phase: they hold once the teacher backoffice is added in phase 2.
+Fixed rules for anything that touches `/api` or student input. These apply across every phase,
+not just whichever one is currently in progress.
 
 - **SQL only parameterized.** With `@neondatabase/serverless`, queries are always written as a
   tagged template: `` sql`SELECT ... WHERE id = ${value}` ``. Never build SQL with string
@@ -373,16 +373,15 @@ elements (Header, exercise buttons, etc).
 ## Formatting
 
 Formatting is handled by **Prettier** (`.prettierrc.json`), not manual judgment or ESLint's
-`--fix`. `eslint-config-prettier` turns off the ESLint rules that could clash with Prettier.
-Before considering a change done: `npm run format` (or `npm run format:check` to just check,
-useful in CI).
+`--fix`. `eslint-config-prettier` turns off the ESLint rules that could clash with Prettier. See
+"How to run and verify" for the exact commands.
 
 ## How to run and verify
 
 - `npm run dev` for frontend only; `vercel dev` to also test `/api` against Neon (needed to
   test `/auth` and `/admin/*`, which depend on `/api`).
-- `npm run format:check`, `npx tsc --noEmit` and `npm run lint` before considering a change
-  done.
+- `npm run format:check` (or `npm run format` to auto-fix), `npx tsc --noEmit` and `npm run lint`
+  before considering a change done.
 - Manual student verification: go through name → level → difficulty → exercises (all 4 types)
   → summary, and confirm in Neon that rows show up in `students`/`attempts` (with `correct` set
   correctly) and that `points` updates.
