@@ -2,14 +2,20 @@ import { useState } from "react";
 import { SignIn, SignUp } from "@clerk/clerk-react";
 import { useTheme } from "styled-components";
 import { ConsentInterstitial } from "../../components/student/ConsentInterstitial";
+import { PrivacyNotice } from "../../components/student/PrivacyNotice";
 import { Screen, Subtitle, Title } from "../../components/ui/Screen";
-import { AuthWrapper, SwitchModeButton } from "./StudentAuth.styles";
+import { AuthWrapper, GuestButton, SwitchModeButton } from "./StudentAuth.styles";
 
 type Mode = "signIn" | "signUp";
 
-export function StudentAuth() {
+interface Props {
+  onPlayAsGuest: () => void;
+}
+
+export function StudentAuth({ onPlayAsGuest }: Props) {
   const [mode, setMode] = useState<Mode>("signIn");
   const [consentGiven, setConsentGiven] = useState(false);
+  const [showPrivacyNotice, setShowPrivacyNotice] = useState(true);
   const theme = useTheme();
 
   if (mode === "signUp" && !consentGiven) {
@@ -50,6 +56,14 @@ export function StudentAuth() {
       >
         {mode === "signIn" ? "New here? Create an account" : "Already have an account? Sign in"}
       </SwitchModeButton>
+      {mode === "signIn" && (
+        <GuestButton type="button" onClick={onPlayAsGuest}>
+          Play without an account
+        </GuestButton>
+      )}
+      {mode === "signIn" && showPrivacyNotice && (
+        <PrivacyNotice onClose={() => setShowPrivacyNotice(false)} />
+      )}
     </Screen>
   );
 }

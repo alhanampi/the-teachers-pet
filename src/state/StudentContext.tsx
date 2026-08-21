@@ -22,6 +22,7 @@ interface StudentState {
   points: number;
   level: Level | null;
   difficulty: Difficulty | null;
+  isGuest: boolean;
 }
 
 type Action =
@@ -48,6 +49,14 @@ const initialState: StudentState = {
   points: 0,
   level: null,
   difficulty: null,
+  isGuest: false,
+};
+
+const guestState: StudentState = {
+  ...initialState,
+  step: "level",
+  name: "Guest",
+  isGuest: true,
 };
 
 function reducer(state: StudentState, action: Action): StudentState {
@@ -95,11 +104,20 @@ interface StudentContextValue extends StudentState {
 
 const StudentContext = createContext<StudentContextValue | null>(null);
 
-export function StudentProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+interface StudentProviderProps {
+  children: ReactNode;
+  guest?: boolean;
+  onExitGuest?: () => void;
+}
+
+export function StudentProvider({ children, guest = false, onExitGuest }: StudentProviderProps) {
+  // guest is only read once: StudentFlow fully remounts this tree whenever it switches
+  // in or out of guest mode, so a lazy initializer is enough — it never changes mid-lifecycle.
+  const [state, dispatch] = useReducer(reducer, guest ? guestState : initialState);
   const { signOut: clerkSignOut } = useClerk();
 
   useEffect(() => {
+    if (guest) return;
     startSession()
       .then(({ studentId, name, points, teacherId }) =>
         dispatch({ type: "SESSION_READY", studentId, name, points, teacherId }),
@@ -107,7 +125,7 @@ export function StudentProvider({ children }: { children: ReactNode }) {
       .catch(() => {
         console.warn("Could not start the session.");
       });
-  }, []);
+  }, [guest]);
 
   const completeOnboarding = useCallback(async (teacherId: string) => {
     const result = await chooseTeacher(teacherId);
@@ -123,9 +141,10 @@ export function StudentProvider({ children }: { children: ReactNode }) {
 
   const completeExercise = useCallback(
     (exerciseId: string, correct: boolean) => {
-      if (!state.studentId || !state.level || !state.difficulty) return;
+      if (!state.level || !state.difficulty) return;
       const points = state.points + 1;
       dispatch({ type: "POINTS_UPDATED", points });
+      if (state.isGuest || !state.studentId) return;
       recordAttempt({
         studentId: state.studentId,
         exerciseId,
@@ -136,17 +155,21 @@ export function StudentProvider({ children }: { children: ReactNode }) {
         console.warn("Could not sync the point with the server; saved locally.");
       });
     },
-    [state.studentId, state.level, state.difficulty, state.points],
+    [state.isGuest, state.studentId, state.level, state.difficulty, state.points],
   );
 
   const finishExercises = useCallback(() => dispatch({ type: "FINISH_EXERCISES" }), []);
   const playAgain = useCallback(() => dispatch({ type: "PLAY_AGAIN" }), []);
   const goBack = useCallback(() => dispatch({ type: "GO_BACK" }), []);
   const signOut = useCallback(() => {
+    if (state.isGuest) {
+      onExitGuest?.();
+      return;
+    }
     void clerkSignOut();
-  }, [clerkSignOut]);
+  }, [state.isGuest, clerkSignOut, onExitGuest]);
 
-  if (!state.studentId) {
+  if (!state.isGuest && !state.studentId) {
     return (
       <Screen>
         <Subtitle>Loading...</Subtitle>
