@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { StudentProvider, useStudent } from "../../state/StudentContext";
 import { Header } from "../../components/layout/Header";
@@ -26,6 +27,7 @@ function StudentSteps() {
 
 export function StudentFlow() {
   const { isLoaded, isSignedIn } = useAuth();
+  const [guestMode, setGuestMode] = useState(false);
 
   if (!isLoaded) {
     return (
@@ -35,13 +37,21 @@ export function StudentFlow() {
     );
   }
 
-  if (!isSignedIn) {
-    return <StudentAuth />;
+  if (isSignedIn) {
+    return (
+      <StudentProvider>
+        <StudentSteps />
+      </StudentProvider>
+    );
   }
 
-  return (
-    <StudentProvider>
-      <StudentSteps />
-    </StudentProvider>
-  );
+  if (guestMode) {
+    return (
+      <StudentProvider guest onExitGuest={() => setGuestMode(false)}>
+        <StudentSteps />
+      </StudentProvider>
+    );
+  }
+
+  return <StudentAuth onPlayAsGuest={() => setGuestMode(true)} />;
 }

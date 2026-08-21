@@ -9,7 +9,9 @@ solves exercises, earning a point for each one completed.
 **Phase 3 in progress: student accounts.** The student now signs up/logs in at `/` via a
 **separate Clerk application from the teacher one** (see "Student auth"), picks their institute
 and teacher once right after signing up, then goes through level → difficulty → exercises →
-summary same as before. There's also a teacher dashboard behind auth: `/auth` (login),
+summary same as before. A student without parental authorization to create an account can
+instead tap "Play without an account" for a fully anonymous, unpersisted guest session (see
+"Student auth" → "Guest mode"). There's also a teacher dashboard behind auth: `/auth` (login),
 `/admin/dashboard` (students + history, scoped to "my students" — see "Teacher auth") and
 `/admin/exercises` (exercise manager, still global across all teachers/institutes). The
 backoffice uses **Clerk** for auth (see "Teacher auth") — any teacher can create their own
@@ -117,6 +119,7 @@ src/
     student/
       StudentClerkProvider/ mounts the student Clerk application, wraps the "/" route
       ConsentInterstitial/   parent/guardian notice shown once, before student sign-up
+      PrivacyNotice/         dismissible "no personal data" popup shown on the sign-in screen
     admin/
       RequireAuth/      route guard: redirects to /auth if there's no teacher session
       TeacherClerkProvider/ mounts the teacher Clerk application, wraps /auth + /admin/* routes
@@ -273,14 +276,20 @@ signUpUrl="/">` — `TeacherClerkProvider` does the same for `/auth`+`/admin/*` 
   key. Both live as layout routes in `src/App.tsx`; since `/` and `/auth`+`/admin/*` are
   mutually exclusive in the router, only one `ClerkProvider` (and one `window.Clerk`) is ever
   mounted at a time.
-- `StudentFlow` (`src/pages/StudentFlow`) is the gate: not loaded → "Loading...", not signed in →
-  `StudentAuth` (`src/pages/StudentAuth`), signed in → mounts `StudentProvider` (only then, so its
-  `POST /api/session` call always has a token). `StudentAuth` toggles between Clerk's `<SignIn>`
-  and `<SignUp>` (`routing="virtual"`, themed via `appearance.variables` exactly like the teacher
-  `<SignIn>`); on the sign-up path, `ConsentInterstitial`
-  (`src/components/student/ConsentInterstitial`) — a short note for parents/guardians that only a
-  username and academic history are stored, for the teacher's tracking — must be approved before
-  `<SignUp>` renders. Declining returns to sign-in without creating an account.
+- `StudentFlow` (`src/pages/StudentFlow`) is the gate: not loaded → "Loading...", signed in →
+  mounts `StudentProvider` (only then, so its `POST /api/session` call always has a token), a
+  local `guestMode` flag (not signed in, but "Play without an account" was tapped) → mounts
+  `StudentProvider guest` (see "Guest mode" below), otherwise → `StudentAuth`
+  (`src/pages/StudentAuth`). `StudentAuth` toggles between Clerk's `<SignIn>` and `<SignUp>`
+  (`routing="virtual"`, themed via `appearance.variables` exactly like the teacher `<SignIn>`);
+  on the sign-up path, `ConsentInterstitial` (`src/components/student/ConsentInterstitial`) — a
+  short note for parents/guardians that only a username and academic history are stored, for the
+  teacher's tracking — must be approved before `<SignUp>` renders. Declining returns to sign-in
+  without creating an account. The sign-in screen also shows `PrivacyNotice`
+  (`src/components/student/PrivacyNotice`), a dismissible popup (built on the shared `Modal`)
+  stating this is an internal educational app that collects no personal data beyond study
+  statistics — independent from `ConsentInterstitial`, shown to everyone regardless of which
+  path (sign in, sign up, guest) they take next.
 - Server: `api/_auth.ts` exports `requireStudent(req)`, structurally identical to
   `requireTeacher` but verified against `CLERK_STUDENT_SECRET_KEY` and reading a `username`
   session-token claim (`{"username": "{{user.username}}"}`, configured once in the student Clerk
@@ -304,6 +313,17 @@ signUpUrl="/">` — `TeacherClerkProvider` does the same for `/auth`+`/admin/*` 
   In-app back-navigation (`Header`'s `←`) never reaches earlier than `"level"` — `"onboarding"`
   has no back button, matching the fact that the student/teacher relationship is set once,
   not something to idly step back through.
+- **Guest mode**: a deliberate, permanent alternative to Clerk auth for a student without
+  parental authorization to create an account — not a temporary stopgap. Entered via "Play
+  without an account" on `StudentAuth`'s sign-in screen, which flips a local `guestMode` flag in
+  `StudentFlow` (never persisted — a refresh always lands back on the login screen, by design:
+  no consent was ever given to remember anything). `StudentProvider` accepts a `guest` prop that
+  skips `POST /api/session` entirely and initializes state directly at `"level"` (no onboarding,
+  no institute/teacher). Guest play **never touches `/api` beyond the already-public `GET
+/api/exercises`** — points still increment locally (so the `PointsPill` works normally) but
+  `completeExercise` skips `POST /api/attempts` outright when `isGuest` is true, so nothing about
+  a guest's session is ever written to Neon, not even an anonymous row. Tapping the Header logo
+  (`signOut`) exits guest mode back to the login screen instead of calling Clerk's `signOut()`.
 - All Clerk env vars for the **student** app (`VITE_CLERK_STUDENT_PUBLISHABLE_KEY`,
   `CLERK_STUDENT_SECRET_KEY`) need to exist both in `.env.local` **and** registered on the
   Vercel project, same as the teacher app's vars above.
