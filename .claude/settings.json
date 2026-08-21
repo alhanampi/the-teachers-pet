@@ -2,19 +2,27 @@
   "permissions": {
     "allow": [
       "Bash(node *)",
+      "Bash(node -e *)",
       "Bash(npm *)",
       "Bash(npx *)",
-      "Bash(lsof *)",
-      "Bash(kill *)",
-      "Bash(curl *)",
-      "Bash(pkill -f \"vercel dev\")",
-      "Bash(pkill -f \"vite --port\")",
       "Bash(npx playwright *)",
       "Bash(npx vercel *)",
+      "Bash(npx neon *)",
+      "Bash(lsof *)",
+      "Bash(kill *)",
+      "Bash(pkill -f \"vercel dev\")",
+      "Bash(pkill -f \"vite --port\")",
+      "Bash(curl *)",
       "Bash(netstat -ano)",
+      "Bash(rm -rf node_modules/.vite)",
       "Bash(git status *)",
       "Bash(git reset *)",
-      "Bash(git pull *)"
+      "Bash(git pull *)",
+      "Bash(git restore *)",
+      "Bash(git worktree *)",
+      "Bash(git check-attr *)",
+      "WebFetch(domain:neon.com)",
+      "Read(//tmp/**)"
     ]
   }
 }
