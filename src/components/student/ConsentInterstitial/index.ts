@@ -1,0 +1,1 @@
+export { ConsentInterstitial } from "./ConsentInterstitial";

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchStudentAttempts, fetchStudents } from "../../lib/adminApi";
 import { usePolling } from "../../lib/usePolling";
+import { summarizeByGroup } from "../../lib/attemptSummary";
 import type { AttemptRecord, Student } from "../../types/admin";
 import { Subtitle, Title } from "../../components/ui/Screen";
 import {
@@ -18,36 +19,6 @@ import {
 
 const WEAK_THRESHOLD = 0.7;
 const POLL_INTERVAL_MS = 10000;
-
-interface GroupSummary {
-  key: string;
-  label: string;
-  total: number;
-  correct: number;
-  accuracy: number;
-}
-
-function summarizeByGroup(attempts: AttemptRecord[]): GroupSummary[] {
-  const groups = new Map<string, { total: number; correct: number }>();
-
-  for (const attempt of attempts) {
-    const key = `${attempt.level} ${attempt.difficulty}`;
-    const group = groups.get(key) ?? { total: 0, correct: 0 };
-    group.total += 1;
-    if (attempt.correct) group.correct += 1;
-    groups.set(key, group);
-  }
-
-  return Array.from(groups.entries())
-    .map(([key, { total, correct }]) => ({
-      key,
-      label: key,
-      total,
-      correct,
-      accuracy: correct / total,
-    }))
-    .sort((a, b) => a.accuracy - b.accuracy);
-}
 
 export function AdminStudentDetail() {
   const { studentId } = useParams<{ studentId: string }>();

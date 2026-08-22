@@ -1,26 +1,30 @@
 ---
 paths:
-  - "src/state/StudentContext.tsx"
   - "src/pages/AdminDashboard/**"
+  - "scripts/link-legacy-students-to-miss-nati.mjs"
 ---
 
-# Duplicate students
+# Duplicate students (legacy, mostly resolved)
 
-Loads only when Claude works with `StudentContext.tsx` or `AdminDashboard`. See the root
-`CLAUDE.md` for everything else.
+Loads only when Claude works with `AdminDashboard` or the legacy backfill script. See the root
+`CLAUDE.md` for everything else, and `.claude/rules/student-auth.md` for how real accounts work
+now.
 
-There's no login, so a student's identity is just a `studentId` in `localStorage`
-(`StudentContext.tsx`). If that gets cleared (browser data wipe, PWA reinstall), the next
-`submitName` creates a brand-new `students` row with `crypto.randomUUID()` — the same kid can
-end up with two or more rows sharing the same name. Two mitigations, both partial by design (no
-login was added, on purpose):
+Before student accounts existed, a student's identity was just a `studentId` in `localStorage`,
+generated client-side — a browser data wipe or PWA reinstall silently created a brand-new
+`students` row for the same kid. Real accounts fix this going forward: one Clerk account maps to
+exactly one `students` row via `clerk_user_id` (unique), so signing back in on any device
+resumes the same row instead of creating a new one.
 
-- `submitName` calls `navigator.storage.persist()` (feature-detected, fire-and-forget) when a
-  session starts, to reduce (not eliminate) the chance the browser evicts `localStorage` under
-  storage pressure. It does nothing for a manual data wipe or reinstall — accepted limitation.
-- `AdminDashboard` visually clusters `students` rows that share the same normalized name (trim +
-  lowercase) under one group header, purely as a display aid — points and attempt history are
-  **never** summed or merged across rows, because two different kids could share a first name
-  and silently merging by name alone would be worse than the current bug. Each row still links
-  to its own `/admin/dashboard/:studentId` detail page. This is a client-side-only computation
-  over the existing `GET /api/students` response — no backend changes.
+Two remnants of the old behavior are still relevant:
+
+- Every `students` row created before this migration has `clerk_user_id = null` and was
+  one-time-backfilled to a single default teacher/institute (see
+  `scripts/link-legacy-students-to-miss-nati.mjs`) — those rows can never be "logged into" again
+  (there was no real account behind them), they're read-only history now.
+- `AdminDashboard` still visually clusters `students` rows that share the same normalized name
+  (trim + lowercase) under one group header, purely as a display aid — points and attempt history
+  are **never** summed or merged across rows. This mainly matters for those legacy rows now;
+  new, Clerk-backed signups shouldn't produce duplicates in the first place. Each row still links
+  to its own `/admin/dashboard/:studentId` detail page. Client-side-only computation over the
+  existing `GET /api/students` response — no backend changes.

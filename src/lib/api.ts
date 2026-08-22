@@ -1,11 +1,5 @@
 import type { Difficulty, Exercise, Level } from "../types/exercise";
 
-export interface SessionResponse {
-  studentId: string;
-  name: string;
-  points: number;
-}
-
 export interface AttemptResponse {
   points: number;
 }
@@ -30,14 +24,6 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
-}
-
-export function startSession(name: string, studentId: string): Promise<SessionResponse> {
-  return fetch("/api/session", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, studentId }),
-  }).then((res) => parseOrThrow<SessionResponse>(res));
 }
 
 export function recordAttempt(params: {

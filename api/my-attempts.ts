@@ -1,0 +1,64 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { requireStudent } from "./_auth.js";
+import { ensureSchema, sql } from "./_db.js";
+
+interface AttemptRow {
+  id: string;
+  exercise_id: string;
+  level: string;
+  difficulty: string;
+  correct: boolean;
+  created_at: string;
+  prompt: string | null;
+  type: string | null;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== "GET") {
+    res.status(405).json({ error: "Method not allowed" });
+    return;
+  }
+
+  const student = await requireStudent(req);
+  if (!student) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  try {
+    await ensureSchema();
+
+    const rows = (await sql`
+      SELECT
+        a.id,
+        a.exercise_id,
+        a.level,
+        a.difficulty,
+        a.correct,
+        a.created_at,
+        e.prompt,
+        e.type
+      FROM attempts a
+      JOIN students s ON s.id = a.student_id
+      LEFT JOIN exercises e ON e.id::text = a.exercise_id
+      WHERE s.clerk_user_id = ${student.id}
+      ORDER BY a.created_at DESC
+    `) as AttemptRow[];
+
+    res.status(200).json(
+      rows.map((row) => ({
+        id: row.id,
+        exerciseId: row.exercise_id,
+        level: row.level,
+        difficulty: row.difficulty,
+        correct: row.correct,
+        createdAt: row.created_at,
+        prompt: row.prompt,
+        type: row.type,
+      })),
+    );
+  } catch (error) {
+    console.error("GET /api/my-attempts failed", error);
+    res.status(500).json({ error: "Could not load your progress" });
+  }
+}

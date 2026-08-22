@@ -32,9 +32,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
+  if (!teacher.teacherId) {
+    res.status(403).json({ error: "This account isn't linked to a teacher profile" });
+    return;
+  }
 
   try {
     await ensureSchema();
+
+    const [owned] = (await sql`
+      SELECT 1 FROM students WHERE id = ${studentId} AND teacher_id = ${teacher.teacherId}
+    `) as unknown[];
+    if (!owned) {
+      res.status(404).json({ error: "Student not found" });
+      return;
+    }
 
     const rows = (await sql`
       SELECT

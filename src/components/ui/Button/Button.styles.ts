@@ -18,7 +18,7 @@ const variantStyles = {
   `,
 };
 
-export const StyledButton = styled.button<{ $variant?: ButtonVariant }>`
+export const StyledButton = styled.button<{ $variant?: ButtonVariant; $compact?: boolean }>`
   ${({ $variant = "primary" }) => variantStyles[$variant]}
   border: none;
   border-radius: ${({ theme }) => theme.radii.pill};
@@ -27,7 +27,8 @@ export const StyledButton = styled.button<{ $variant?: ButtonVariant }>`
   font-weight: 700;
   font-size: ${({ theme }) => theme.fontSizes.md};
   min-height: 44px;
-  padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.xl};
+  padding: ${({ theme, $compact }) => ($compact ? theme.spacing.sm : theme.spacing.md)}
+    ${({ theme, $compact }) => ($compact ? theme.spacing.lg : theme.spacing.xl)};
   cursor: pointer;
   ${pressable}
 

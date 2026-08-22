@@ -10,7 +10,8 @@ paths:
 # Teacher auth (Clerk)
 
 Loads only when Claude works with the teacher-facing auth surface. See the root `CLAUDE.md` for
-everything else (architecture, conventions, "Security").
+everything else (architecture, conventions, "Security", "Student auth" in
+`.claude/rules/student-auth.md`).
 
 - The backoffice uses **Clerk**, not Neon Auth. Sign-up is **open** — any teacher can create
   their own account (Google or email/password) via Clerk's own `<SignIn>` widget at `/auth`
@@ -27,7 +28,10 @@ everything else (architecture, conventions, "Security").
   allowlist check. The email claim requires a custom Clerk session-token claim configured once
   in the Clerk Dashboard (Sessions → Customize session token:
   `{"email": "{{user.primary_email_address}}"}`), so it's available without an extra Clerk API
-  call per request.
+  call per request. `requireTeacher` also resolves the caller's own `teachers.id` row (`teacher.
+teacherId`, `null` if this Clerk account has no `teachers` row yet) — this is what
+  `students.ts`/`student-attempts.ts` use to scope a teacher to their own students, so `_auth.ts`
+  is DB-aware now, not pure token verification.
 - `api/clerk-webhook.ts` receives Clerk's `user.created` webhook (signature verified with
   `svix`, `CLERK_WEBHOOK_SECRET`), then emails a notification via Resend (`RESEND_API_KEY`) to
   `NOTIFY_TEACHER_SIGNUP_EMAIL` (defaults to `alhanampi@gmail.com`) — the endpoint must be
@@ -37,8 +41,8 @@ everything else (architecture, conventions, "Security").
   accounts, password change) are Clerk's own prebuilt components, themed via their `appearance`
   prop — see the root `CLAUDE.md`'s "Stack" section for this scoped exception to the
   no-pre-styled-UI rule.
-- All Clerk/Resend env vars (`VITE_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`,
-  `CLERK_WEBHOOK_SECRET`, `RESEND_API_KEY`, `NOTIFY_TEACHER_SIGNUP_EMAIL`) need to exist both in
-  `.env.local` **and** registered on the Vercel project (`vercel env add ...`) for every
-  environment that needs them — `vercel dev` only injects into functions the env vars the
-  project has declared, not whatever happens to be in `.env.local`.
+- All Clerk/Resend env vars for the **teacher** app (`VITE_CLERK_PUBLISHABLE_KEY`,
+  `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`, `RESEND_API_KEY`, `NOTIFY_TEACHER_SIGNUP_EMAIL`)
+  need to exist both in `.env.local` **and** registered on the Vercel project
+  (`vercel env add ...`) for every environment that needs them — `vercel dev` only injects into
+  functions the env vars the project has declared, not whatever happens to be in `.env.local`.

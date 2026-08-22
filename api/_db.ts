@@ -22,6 +22,28 @@ export function ensureSchema(): Promise<void> {
         )
       `;
       await sql`
+        CREATE TABLE IF NOT EXISTS institutes (
+          id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+          name text NOT NULL UNIQUE,
+          created_at timestamptz NOT NULL DEFAULT now()
+        )
+      `;
+      await sql`
+        CREATE TABLE IF NOT EXISTS teachers (
+          id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+          clerk_user_id text NOT NULL UNIQUE,
+          display_name text NOT NULL,
+          institute_id uuid NOT NULL REFERENCES institutes(id),
+          created_at timestamptz NOT NULL DEFAULT now()
+        )
+      `;
+      await sql`
+        ALTER TABLE students ADD COLUMN IF NOT EXISTS clerk_user_id text UNIQUE
+      `;
+      await sql`
+        ALTER TABLE students ADD COLUMN IF NOT EXISTS teacher_id uuid REFERENCES teachers(id)
+      `;
+      await sql`
         CREATE TABLE IF NOT EXISTS attempts (
           id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
           student_id uuid NOT NULL REFERENCES students(id),

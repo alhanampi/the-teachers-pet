@@ -10,7 +10,7 @@ paths:
 Loads only when Claude works with the Header or the theme system. See the root `CLAUDE.md` for
 everything else.
 
-There's a fixed `Header` above the whole app (every student screen, including `Welcome`) with a
+There's a fixed `Header` above every signed-in student screen (not `StudentAuth`) with a
 dropdown for the student to pick between **5 different color palettes** (same layout and
 components, only the color set changes). The 5 palettes live as `AppTheme` objects in
 `src/styles/themes/`, sharing the same shape `src/styles/theme.ts` defines. The chosen palette
