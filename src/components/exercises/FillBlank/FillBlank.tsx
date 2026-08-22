@@ -26,7 +26,7 @@ export function FillBlank({ exercise, onComplete, disabled }: Props) {
 
   return (
     <div>
-      <Prompt>{exercise.prompt}</Prompt>
+      <Prompt hint={exercise.hint}>{exercise.prompt}</Prompt>
       <Input
         value={value}
         onChange={(event) => setValue(event.target.value)}

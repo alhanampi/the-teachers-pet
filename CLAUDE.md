@@ -312,7 +312,9 @@ Formatting is handled by **Prettier** (`.prettierrc.json`), not manual judgment 
 - Manual teacher verification: log in at `/auth`, confirm that without a session `/admin/*`
   redirects to `/auth`; in `/admin/exercises` change all 3 filters and see the counter react,
   create one exercise of each type (with a hint) and confirm it shows up in the list and in the
-  student's round if level/difficulty match; in `/admin/dashboard`, confirm only students who
+  student's round if level/difficulty match — including the "💡 Need a hint?" button, which
+  opens the hint text and is absent on exercises with no `hint` set; in `/admin/dashboard`,
+  confirm only students who
   picked this teacher are listed, open one and confirm the history and the "where to improve"
   summary match the attempts made.
 - Requires `DATABASE_URL` in `.env.local` (Neon connection string, not committed), plus the
@@ -321,12 +323,19 @@ Formatting is handled by **Prettier** (`.prettierrc.json`), not manual judgment 
   `CLERK_STUDENT_SECRET_KEY` (all also registered on the Vercel project, not just in
   `.env.local` — see `.claude/rules/teacher-auth.md`/`.claude/rules/student-auth.md`).
 
+## Roadmap
+
+See `ROADMAP.md` at the repo root for proposed future improvements (student motivation, teacher
+tooling, technical robustness), each tagged with a version number. Check it before proposing a
+big new feature — it may already be thought through there, with its scope already narrowed down.
+Shipped items are removed from `ROADMAP.md` as they land (v1.1, showing the exercise `hint` to
+the student, was the first).
+
 ## Out of scope for now
 
-Multiple teacher accounts with different roles, manual point editing, exporting reports, showing
-the `hint` on the student's screen (the data is already stored, the student-side UI is
-missing), exercises scoped per institute/teacher (the exercise bank stays global on purpose), a
-student account-settings screen to add an email or change a username without logging out (see
+Multiple teacher accounts with different roles, manual point editing, exporting reports,
+exercises scoped per institute/teacher (the exercise bank stays global on purpose), a student
+account-settings screen to add an email or change a username without logging out (see
 `.claude/rules/student-auth.md`), `requireStudent`-gating `POST /api/attempts`/`GET
 /api/progress` (see "Security" above). Also, from `.claude/rules/student-tabs.md`: a
 clickable-hotspot image mechanic for Vocabulary (tap a spot on a scene to reveal a word — needs

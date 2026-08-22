@@ -19,9 +19,14 @@ full catalog requests `GET /api/exercises` (`fetchExercises` in `src/lib/api.ts`
 student, the same fetch reused in `AdminExercises`) and filters in memory — the filtering
 pattern didn't change, only the data source. Each exercise is typed in `src/types/exercise.ts`
 as a discriminated union on `type`: `"multiple-choice" | "fill-blank" | "matching" |
-"word-order"`, with an optional `hint?: string` field in the database (not shown on the
-student's screen yet). Each type has its own component in `src/components/exercises/`, all
-sharing the `{ exercise, onComplete(correct: boolean), disabled? }` interface.
+"word-order" | "listening"`, with an optional `hint?: string` field in the database. Each type
+has its own component in `src/components/exercises/`, all sharing the
+`{ exercise, onComplete(correct: boolean), disabled? }` interface, and all pass `exercise.hint`
+straight through to the shared `Prompt` (`src/components/exercises/Prompt`) as its `hint` prop —
+`Prompt` is what actually renders the "💡 Need a hint?" `HelpTooltip` when one exists, so none of
+the 5 exercise components duplicate that logic. `AdminExercises`' read-only preview list reuses
+`Prompt` too, but never passes `hint`, since the teacher already sees/edits it directly in
+`ExerciseForm`.
 
 `Exercise.tsx` requests the catalog once when entering the step, builds the round by filtering
 on the chosen level/difficulty, shuffles with `shuffleArray` (`src/lib/shuffle.ts`) and keeps
