@@ -186,8 +186,8 @@ from-scratch mini-flow, and My Stats' Recharts view.
 
 ## Security
 
-Fixed rules for anything that touches `/api` or student input. These aren't just for this
-phase: they hold once the teacher backoffice is added in phase 2.
+Fixed rules for anything that touches `/api` or student input. These apply across every phase,
+not just whichever one is currently in progress.
 
 - **SQL only parameterized.** With `@neondatabase/serverless`, queries are always written as a
   tagged template: `` sql`SELECT ... WHERE id = ${value}` ``. Never build SQL with string
@@ -288,9 +288,8 @@ See `public/CLAUDE.md` (loads only when working in `public/`) for the manifest/i
 ## Formatting
 
 Formatting is handled by **Prettier** (`.prettierrc.json`), not manual judgment or ESLint's
-`--fix`. `eslint-config-prettier` turns off the ESLint rules that could clash with Prettier.
-Before considering a change done: `npm run format` (or `npm run format:check` to just check,
-useful in CI).
+`--fix`. `eslint-config-prettier` turns off the ESLint rules that could clash with Prettier. See
+"How to run and verify" for the exact commands.
 
 ## How to run and verify
 
