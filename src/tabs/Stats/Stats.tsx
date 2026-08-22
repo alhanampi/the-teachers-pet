@@ -72,7 +72,7 @@ export function Stats() {
               tick={{ fontSize: 11 }}
             />
             <Tooltip
-              formatter={(value: number) => [`${Math.round(value)}%`, "Accuracy"]}
+              formatter={(value) => [`${Math.round(Number(value))}%`, "Accuracy"]}
               cursor={{ fill: theme.colors.background }}
             />
             <Bar
