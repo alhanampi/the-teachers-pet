@@ -9,4 +9,6 @@ export interface VocabularyWord {
   categoryId: string;
   word: string;
   icon: string;
+  antonymPairs?: Array<[string, string]>;
+  colorExamples?: string[];
 }

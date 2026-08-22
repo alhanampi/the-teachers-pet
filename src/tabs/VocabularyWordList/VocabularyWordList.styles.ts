@@ -14,8 +14,9 @@ export const BackRow = styled.button`
   ${pressable}
 `;
 
-export const WordCard = styled.div`
+export const WordCard = styled.button`
   background: ${({ theme }) => theme.colors.surface};
+  border: none;
   border-radius: ${({ theme }) => theme.radii.md};
   box-shadow: ${({ theme }) => theme.shadows.card} rgba(0, 0, 0, 0.12);
   padding: ${({ theme }) => theme.spacing.sm};
@@ -23,6 +24,8 @@ export const WordCard = styled.div`
   flex-direction: column;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.xs};
+  cursor: pointer;
+  ${pressable}
 `;
 
 export const WordIcon = styled.img`

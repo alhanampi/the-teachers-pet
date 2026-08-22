@@ -3,8 +3,9 @@ import { StyledButton, type ButtonVariant } from "./Button.styles";
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   $variant?: ButtonVariant;
+  $compact?: boolean;
 }
 
-export function Button({ $variant, ...rest }: Props) {
-  return <StyledButton $variant={$variant} {...rest} />;
+export function Button({ $variant, $compact, ...rest }: Props) {
+  return <StyledButton $variant={$variant} $compact={$compact} {...rest} />;
 }

@@ -33,7 +33,11 @@ signUpUrl="/">` — `TeacherClerkProvider` does the same for `/auth`+`/admin/*` 
   local `guestMode` flag (not signed in, but "Play without an account" was tapped) → mounts
   `StudentProvider guest` (see "Guest mode" below), otherwise → `StudentAuth`
   (`src/pages/StudentAuth`). `StudentAuth` toggles between Clerk's `<SignIn>` and `<SignUp>`
-  (`routing="virtual"`, themed via `appearance.variables` exactly like the teacher `<SignIn>`);
+  (`routing="virtual"`, themed via `appearance.variables` exactly like the teacher `<SignIn>`,
+  plus `appearance.elements.footer: { display: "none" }` — unlike the teacher `<SignIn>`, this one
+  hides Clerk's own footer (its own "Sign up"/"Secured by Clerk"/dev-mode badge), since it's
+  redundant with the app's own `SwitchModeButton` below and was pushing "Play without an account"
+  below the fold on some screens);
   on the sign-up path, `ConsentInterstitial` (`src/components/student/ConsentInterstitial`) — a
   short note for parents/guardians that only a username and academic history are stored, for the
   teacher's tracking — must be approved before `<SignUp>` renders. Declining returns to sign-in
@@ -41,7 +45,8 @@ signUpUrl="/">` — `TeacherClerkProvider` does the same for `/auth`+`/admin/*` 
   (`src/components/student/PrivacyNotice`), a dismissible popup (built on the shared `Modal`)
   stating this is an internal educational app that collects no personal data beyond study
   statistics — independent from `ConsentInterstitial`, shown to everyone regardless of which
-  path (sign in, sign up, guest) they take next.
+  path (sign in, sign up, guest) they take next. Deliberately in Spanish, not English like the
+  rest of the sign-in screen — see the root `CLAUDE.md`'s "Language" section.
 - Server: `api/_auth.ts` exports `requireStudent(req)`, structurally identical to
   `requireTeacher` but verified against `CLERK_STUDENT_SECRET_KEY` and reading a `username`
   session-token claim (`{"username": "{{user.username}}"}`, configured once in the student Clerk

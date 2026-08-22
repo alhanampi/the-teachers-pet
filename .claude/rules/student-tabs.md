@@ -31,7 +31,12 @@ what's on screen.
   exists yet (see the root `CLAUDE.md`'s "Out of scope for now"). Browsing awards no points and
   makes zero `/api` calls, so it's fully available in guest mode. Icons are bundled SVGs under
   `public/vocabulary/icons/` rather than native emoji glyphs, specifically to avoid
-  device-inconsistent rendering.
+  device-inconsistent rendering. Tapping a word card opens `VocabularyWordDetail`
+  (`src/tabs/VocabularyWordDetail`, a `Modal`) showing at least 5 related pairs per
+  `VocabularyWord`: `antonymPairs` (descriptive adjective opposites, e.g. cat → Fat/Thin,
+  Big/Small) for animals/places/verbs, or `colorExamples` (real things that are that color, e.g.
+  yellow → Sun, Lemon, Banana) for the colors category — the two fields are mutually exclusive
+  per word and the component picks which section to render based on which one is present.
 - **My Stats** (`src/tabs/Stats`) fetches `GET /api/my-attempts` (`requireStudent`-protected,
   scoped to the caller's own `clerk_user_id` — never a client-supplied `studentId`) and reuses
   `summarizeByGroup` (`src/lib/attemptSummary.ts`) — the same accuracy-by-level/difficulty

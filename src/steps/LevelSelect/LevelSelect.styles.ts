@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { media } from "../../styles/theme";
 import { pressable } from "../../styles/interactive";
 
 export const LevelCard = styled.button<{ $index: number }>`
@@ -8,10 +9,15 @@ export const LevelCard = styled.button<{ $index: number }>`
   color: ${({ theme }) => theme.colors.white};
   font-family: ${({ theme }) => theme.fonts.body};
   font-weight: 800;
-  font-size: ${({ theme }) => theme.fontSizes.lg};
+  font-size: ${({ theme }) => theme.fontSizes.md};
   min-height: 44px;
-  padding: ${({ theme }) => theme.spacing.lg};
+  padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.lg};
   cursor: pointer;
   box-shadow: 0 5px 0 rgba(0, 0, 0, 0.15);
   ${pressable}
+
+  ${media.tablet} {
+    font-size: ${({ theme }) => theme.fontSizes.lg};
+    padding: ${({ theme }) => theme.spacing.lg};
+  }
 `;

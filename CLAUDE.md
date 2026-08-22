@@ -270,11 +270,17 @@ with input: `StudentAuth`, `Onboarding`, `FillBlank`). To achieve that:
 
 **All text the student sees is in English**: titles, subtitles, buttons, placeholders,
 aria-labels, color theme names, `<title>` and `index.html` (`lang="en"`), and the PWA manifest.
-The only exception is the exercise data itself when an exercise intentionally requires mixing
-languages (for example, in vocabulary `matching` where the right-hand pair is the Spanish
-translation of the English word) — that isn't translated, because translating it would break
-the exercise. Code comments stay in Spanish, because they're for whoever develops, not for the
-student.
+Two exceptions:
+
+- The exercise data itself when an exercise intentionally requires mixing languages (for
+  example, in vocabulary `matching` where the right-hand pair is the Spanish translation of the
+  English word) — that isn't translated, because translating it would break the exercise.
+- `PrivacyNotice` (`src/components/student/PrivacyNotice`) is in Spanish (Argentina's school
+  context), deliberately — unlike the rest of the sign-in screen, its actual audience is often
+  the parent/guardian standing over the student's shoulder at signup, not the student practicing
+  English, so English-only would defeat its purpose.
+
+Code comments stay in Spanish, because they're for whoever develops, not for the student.
 
 ## Header and color themes
 

@@ -34,6 +34,10 @@ export function StudentAuth({ onPlayAsGuest }: Props) {
       colorBackground: theme.colors.surface,
       borderRadius: theme.radii.md,
       fontFamily: theme.fonts.body,
+      spacingUnit: "0.75rem",
+    },
+    elements: {
+      footer: { display: "none" },
     },
   };
 
