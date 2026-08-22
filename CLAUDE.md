@@ -4,21 +4,21 @@ App (PWA, mobile-first) for kids aged 7 to 12 to practice English. The student s
 username, picks their institute and teacher, then switches between three tabs — **Quizzes**
 (level → difficulty → exercises, earning a point per exercise), **Vocabulary** (browse
 categories of illustrated words) and **My Stats** (a friendly view of their own progress) — see
-"Student tabs".
+`.claude/rules/student-tabs.md`.
 
 ## Current phase
 
 **Phase 3 in progress: student accounts.** The student now signs up/logs in at `/` via a
-**separate Clerk application from the teacher one** (see "Student auth"), picks their institute
-and teacher once right after signing up, then goes through level → difficulty → exercises →
-summary same as before. A student without parental authorization to create an account can
-instead tap "Play without an account" for a fully anonymous, unpersisted guest session (see
-"Student auth" → "Guest mode"). There's also a teacher dashboard behind auth: `/auth` (login),
-`/admin/dashboard` (students + history, scoped to "my students" — see "Teacher auth") and
-`/admin/exercises` (exercise manager, still global across all teachers/institutes). The
-backoffice uses **Clerk** for auth (see "Teacher auth") — any teacher can create their own
-account (Google or email/password); there's no allowlist, but every signup sends a notification
-email.
+**separate Clerk application from the teacher one** (see `.claude/rules/student-auth.md`), picks
+their institute and teacher once right after signing up, then goes through level → difficulty →
+exercises → summary same as before. A student without parental authorization to create an
+account can instead tap "Play without an account" for a fully anonymous, unpersisted guest
+session (see `.claude/rules/student-auth.md` → "Guest mode"). There's also a teacher dashboard
+behind auth: `/auth` (login), `/admin/dashboard` (students + history, scoped to "my students" —
+see `.claude/rules/teacher-auth.md`) and `/admin/exercises` (exercise manager, still global
+across all teachers/institutes). The backoffice uses **Clerk** for auth (see
+`.claude/rules/teacher-auth.md`) — any teacher can create their own account (Google or
+email/password); there's no allowlist, but every signup sends a notification email.
 
 ## Stack
 
@@ -31,8 +31,9 @@ email.
   exception: `/auth` and the account menu in `AdminLayout` use **Clerk's own prebuilt
   components** (`<SignIn>`, `<UserButton>`) for the teacher, and `StudentAuth`
   (`src/pages/StudentAuth`) uses Clerk's `<SignIn>`/`<SignUp>` for the student — all themed via
-  their `appearance` prop rather than styled-components — see "Teacher auth" and "Student auth".
-  Same spirit for data visualization: **Recharts** (`src/tabs/Stats`) renders the "My Stats"
+  their `appearance` prop rather than styled-components — see `.claude/rules/teacher-auth.md`
+  and `.claude/rules/student-auth.md`. Same spirit for data visualization: **Recharts**
+  (`src/tabs/Stats`) renders the "My Stats"
   chart — it's SVG primitives we theme ourselves with `src/styles/theme.ts` colors, not a
   pre-styled widget, same category as Radix above.
   Nowhere else in the app uses pre-styled UI.
@@ -47,7 +48,7 @@ email.
   (`src/App.tsx`) only adds `/auth`, `/admin/dashboard(/:studentId)` and `/admin/exercises` — all
   behind `RequireAuth` (`src/components/admin/RequireAuth`). The student never navigates by URL,
   even to sign in/up. `App.tsx` also splits the tree into two mutually-exclusive layout routes,
-  one per Clerk application — see "Student auth".
+  one per Clerk application — see `.claude/rules/student-auth.md`.
 - Student state: React Context + `useReducer` (`src/state/StudentContext.tsx`). Teacher state:
   no custom context at all — `RequireAuth`/`AdminLayout` use Clerk's own `useAuth()`/`useUser()`
   hooks directly (its lifecycle, a Clerk session, doesn't need app state of its own). Don't use
@@ -55,7 +56,7 @@ email.
 - Persistence: Neon (Postgres) via Vercel serverless functions in `/api/*.ts`. The browser
   **never** connects directly to the database — everything goes through `/api` using
   `@neondatabase/serverless`. Exercises also live in Neon (`exercises` table), not in JSON —
-  see "Exercises".
+  see `.claude/rules/exercises.md`.
 - `vercel dev` (devDependency) to run frontend + `/api` together locally.
 
 ## Code conventions
@@ -103,7 +104,7 @@ src/
     Summary/...
   tabs/                  the three student tabs alongside Quizzes (Onboarding/LevelSelect/../
                         Summary above, unchanged, is the Quizzes tab's own body) — see
-                        "Student tabs"
+                        .claude/rules/student-tabs.md
     Vocabulary/          orchestrator: category picked → word list, else → category grid
     VocabularyCategories/ grid of categories (src/data/vocabulary.ts)
     VocabularyWordList/  grid of word + icon cards for one category
@@ -145,7 +146,8 @@ src/
     vocabulary.ts         VocabularyCategory, VocabularyWord
   data/
     vocabulary.ts         hand-authored categories/words for the Vocabulary tab (not in Neon —
-                          see "Student tabs"; same bootstrap path exercises used pre-Neon)
+                          see .claude/rules/student-tabs.md; same bootstrap path exercises used
+                          pre-Neon)
   styles/
     theme.ts             theme shape (colors, spacing, radii, breakpoints) + types
     themes/               the 5 available color palettes
@@ -160,163 +162,27 @@ contract (method, auth, body shape) for every route under `api/*.ts`.
 
 ## Duplicate students (legacy, mostly resolved)
 
-Before student accounts existed, a student's identity was just a `studentId` in `localStorage`,
-generated client-side — a browser data wipe or PWA reinstall silently created a brand-new
-`students` row for the same kid. Real accounts (see "Student auth") fix this going forward: one
-Clerk account maps to exactly one `students` row via `clerk_user_id` (unique), so signing back in
-on any device resumes the same row instead of creating a new one.
-
-Two remnants of the old behavior are still relevant:
-
-- Every `students` row created before this migration has `clerk_user_id = null` and was
-  one-time-backfilled to a single default teacher/institute (see
-  `scripts/link-legacy-students-to-miss-nati.mjs`) — those rows can never be "logged into" again
-  (there was no real account behind them), they're read-only history now.
-- `AdminDashboard` still visually clusters `students` rows that share the same normalized name
-  (trim + lowercase) under one group header, purely as a display aid — points and attempt history
-  are **never** summed or merged across rows. This mainly matters for those legacy rows now;
-  new, Clerk-backed signups shouldn't produce duplicates in the first place. Each row still links
-  to its own `/admin/dashboard/:studentId` detail page. Client-side-only computation over the
-  existing `GET /api/students` response — no backend changes.
+See `.claude/rules/legacy-students.md` (loads only when working in `AdminDashboard` or the
+legacy backfill script) — why some pre-account `students` rows can never log in again, and why
+`AdminDashboard`'s name-clustering is display-only and never merges data.
 
 ## Teacher auth (Clerk)
 
-- The backoffice uses **Clerk**, not Neon Auth. Sign-up is **open** — any teacher can create
-  their own account (Google or email/password) via Clerk's own `<SignIn>` widget at `/auth`
-  (`src/pages/Auth/Auth.tsx`) — there's no allowlist gating access. Every new signup triggers a
-  notification email (see below), which is the only "who signed up" visibility, by design.
-- Client: `src/main.tsx` wraps the app in `<ClerkProvider publishableKey={...}>`
-  (`VITE_CLERK_PUBLISHABLE_KEY`). There's no custom teacher-auth context —
-  `RequireAuth.tsx`/`AdminLayout.tsx` use Clerk's own `useAuth()`/`useUser()` hooks directly.
-  `src/lib/adminApi.ts`'s `authorizedFetch` gets a fresh session token via
-  `window.Clerk?.session?.getToken()` (Clerk's documented pattern for non-component code) on
-  every protected request.
-- Server: `api/_auth.ts` exports `requireTeacher(req)`, which validates the
-  `Authorization: Bearer` header via `@clerk/backend`'s `verifyToken` (`CLERK_SECRET_KEY`) — no
-  allowlist check. The email claim requires a custom Clerk session-token claim configured once
-  in the Clerk Dashboard (Sessions → Customize session token:
-  `{"email": "{{user.primary_email_address}}"}`), so it's available without an extra Clerk API
-  call per request. `requireTeacher` also resolves the caller's own `teachers.id` row (`teacher.
-teacherId`, `null` if this Clerk account has no `teachers` row yet) — this is what
-  `students.ts`/`student-attempts.ts` use to scope a teacher to their own students, so `_auth.ts`
-  is DB-aware now, not pure token verification.
-- `api/clerk-webhook.ts` receives Clerk's `user.created` webhook (signature verified with
-  `svix`, `CLERK_WEBHOOK_SECRET`), then emails a notification via Resend (`RESEND_API_KEY`) to
-  `NOTIFY_TEACHER_SIGNUP_EMAIL` (defaults to `alhanampi@gmail.com`) — the endpoint must be
-  registered once in the Clerk Dashboard (Webhooks → add endpoint →
-  `https://<deployed-domain>/api/clerk-webhook`, subscribed to `user.created`).
-- `<SignIn>` (login) and `<UserButton>` (account menu in `AdminLayout` — sign-out, connected
-  accounts, password change) are Clerk's own prebuilt components, themed via their `appearance`
-  prop — see the "Stack" section's note on this scoped exception to the no-pre-styled-UI rule.
-- All Clerk/Resend env vars for the **teacher** app (`VITE_CLERK_PUBLISHABLE_KEY`,
-  `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`, `RESEND_API_KEY`, `NOTIFY_TEACHER_SIGNUP_EMAIL`)
-  need to exist both in `.env.local` **and** registered on the Vercel project
-  (`vercel env add ...`) for every environment that needs them — `vercel dev` only injects into
-  functions the env vars the project has declared, not whatever happens to be in `.env.local`.
+See `.claude/rules/teacher-auth.md` (loads only when working on `/auth`, `src/components/admin/`,
+or `api/_auth.ts`/`api/clerk-webhook.ts`) — Clerk setup, `requireTeacher`, the signup-notification
+webhook, and the teacher app's env vars.
 
 ## Student auth (Clerk)
 
-- Students authenticate through a **second, separate Clerk Application** from the teacher one —
-  necessary because Clerk's identifier rules (username vs. email, required vs. optional) are set
-  per-application, and the teacher app must keep requiring email/Google untouched. On this
-  application: **username** is the primary identifier, **email is optional** (a student can add
-  one later from their own Clerk account, but it's never required to sign up or play), password
-  strategy, no social sign-in.
-- Client: `StudentClerkProvider` (`src/components/student/StudentClerkProvider`) wraps only the
-  `/` route with `<ClerkProvider publishableKey={VITE_CLERK_STUDENT_PUBLISHABLE_KEY} signInUrl="/"
-signUpUrl="/">` — `TeacherClerkProvider` does the same for `/auth`+`/admin/*` with the teacher
-  key. Both live as layout routes in `src/App.tsx`; since `/` and `/auth`+`/admin/*` are
-  mutually exclusive in the router, only one `ClerkProvider` (and one `window.Clerk`) is ever
-  mounted at a time.
-- `StudentFlow` (`src/pages/StudentFlow`) is the gate: not loaded → "Loading...", signed in →
-  mounts `StudentProvider` (only then, so its `POST /api/session` call always has a token), a
-  local `guestMode` flag (not signed in, but "Play without an account" was tapped) → mounts
-  `StudentProvider guest` (see "Guest mode" below), otherwise → `StudentAuth`
-  (`src/pages/StudentAuth`). `StudentAuth` toggles between Clerk's `<SignIn>` and `<SignUp>`
-  (`routing="virtual"`, themed via `appearance.variables` exactly like the teacher `<SignIn>`);
-  on the sign-up path, `ConsentInterstitial` (`src/components/student/ConsentInterstitial`) — a
-  short note for parents/guardians that only a username and academic history are stored, for the
-  teacher's tracking — must be approved before `<SignUp>` renders. Declining returns to sign-in
-  without creating an account. The sign-in screen also shows `PrivacyNotice`
-  (`src/components/student/PrivacyNotice`), a dismissible popup (built on the shared `Modal`)
-  stating this is an internal educational app that collects no personal data beyond study
-  statistics — independent from `ConsentInterstitial`, shown to everyone regardless of which
-  path (sign in, sign up, guest) they take next.
-- Server: `api/_auth.ts` exports `requireStudent(req)`, structurally identical to
-  `requireTeacher` but verified against `CLERK_STUDENT_SECRET_KEY` and reading a `username`
-  session-token claim (`{"username": "{{user.username}}"}`, configured once in the student Clerk
-  Dashboard, mirroring the teacher app's `email` claim). Verifying a token against the wrong
-  app's secret key fails outright, so the two auth domains are cryptographically isolated for
-  free — no extra cross-app check needed.
-- **Onboarding** (choosing institute, then teacher) is a step in `StudentContext`'s reducer
-  (`"onboarding"`, before `"level"`) rather than a separate gate — `Onboarding.tsx`
-  (`src/steps/Onboarding`) is one screen, two stacked `<Select>`s (teacher list filtered by the
-  chosen institute via `GET /api/teachers?instituteId=`), submitted via `POST
-/api/student-onboarding`. A student lands back on `"onboarding"` (not `"level"`) on every login
-  until they've completed it once — after that, `teacher_id` being set on their `students` row is
-  what lets them skip straight to `"level"`.
-- **Identity has no localStorage component at all anymore** — `StudentContext`'s only source of
-  truth is the Clerk session (`useUser`/`useAuth`/`useClerk`) plus whatever `POST /api/session`
-  (student-authenticated) returns on mount. There is no student-generated `studentId`; the server
-  decides it (`gen_random_uuid()` on first insert, keyed by `clerk_user_id` after that).
-- **The only way to "change your name" is to log out** (`Header`'s logo — the same
-  progress-loss `ConfirmDialog` as before now triggers a real Clerk `signOut()` instead of
-  clearing `localStorage`) and sign into a different account; there's no in-app rename yet.
-  In-app back-navigation (`Header`'s `←`) never reaches earlier than `"level"` — `"onboarding"`
-  has no back button, matching the fact that the student/teacher relationship is set once,
-  not something to idly step back through.
-- **Guest mode**: a deliberate, permanent alternative to Clerk auth for a student without
-  parental authorization to create an account — not a temporary stopgap. Entered via "Play
-  without an account" on `StudentAuth`'s sign-in screen, which flips a local `guestMode` flag in
-  `StudentFlow` (never persisted — a refresh always lands back on the login screen, by design:
-  no consent was ever given to remember anything). `StudentProvider` accepts a `guest` prop that
-  skips `POST /api/session` entirely and initializes state directly at `"level"` (no onboarding,
-  no institute/teacher). Guest play **never touches `/api` beyond the already-public `GET
-/api/exercises`** — points still increment locally (so the `PointsPill` works normally) but
-  `completeExercise` skips `POST /api/attempts` outright when `isGuest` is true, so nothing about
-  a guest's session is ever written to Neon, not even an anonymous row. Tapping the Header logo
-  (`signOut`) exits guest mode back to the login screen instead of calling Clerk's `signOut()`.
-- All Clerk env vars for the **student** app (`VITE_CLERK_STUDENT_PUBLISHABLE_KEY`,
-  `CLERK_STUDENT_SECRET_KEY`) need to exist both in `.env.local` **and** registered on the
-  Vercel project, same as the teacher app's vars above.
-- **Follow-up, not built yet**: a basic student account-settings screen (Clerk's own
-  `<UserButton>`-style prebuilt widget, student-app instance) to add an email or change a
-  username without a full logout.
+See `.claude/rules/student-auth.md` (loads only when working on `StudentAuth`, `StudentFlow`,
+`src/components/student/`, or `StudentContext.tsx`) — the separate student Clerk application,
+onboarding, guest mode, and the student app's env vars.
 
 ## Student tabs
 
-A signed-in student (real account or guest) switches between three tabs via a fixed bottom
-`TabBar` (`src/components/layout/TabBar`): **Quizzes**, **Vocabulary**, **My Stats**. `StudentFlow`
-holds `activeTab` as local state (not part of `StudentContext` — it's just "which top-level area
-is visible", unrelated to the quiz step machine) and mounts `StudentProvider` once, above the tab
-switch, so identity (`isGuest`, `points`, etc.) is known regardless of which tab is active.
-`Header` also renders once above all three tabs; it takes a `quizTabActive` prop so its
-back-button logic (`canGoBack`) only applies while the Quizzes tab is actually visible — otherwise
-a stale `step` from a Quizzes session left mid-exercise could show a back arrow that doesn't match
-what's on screen.
-
-- **Quizzes** is today's flow, unchanged internally — level → difficulty → exercise → summary,
-  still the only tab with points/exercises/Neon writes.
-- **Vocabulary** (`src/tabs/Vocabulary`, `VocabularyCategories`, `VocabularyWordList`) is a
-  from-scratch mini-flow with its own local state, deliberately **not** built on
-  `StudentContext`'s reducer — there's nothing to persist. Content is pre-loaded, hand-authored
-  data (`src/data/vocabulary.ts`, `src/types/vocabulary.ts`), not Neon — no teacher-authoring UI
-  exists yet (see "Out of scope for now"). Browsing awards no points and makes zero `/api` calls,
-  so it's fully available in guest mode. Icons are bundled SVGs under `public/vocabulary/icons/`
-  (see "Folder structure") rather than native emoji glyphs, specifically to avoid
-  device-inconsistent rendering.
-- **My Stats** (`src/tabs/Stats`) fetches `GET /api/my-attempts` (`requireStudent`-protected,
-  scoped to the caller's own `clerk_user_id` — never a client-supplied `studentId`) and reuses
-  `summarizeByGroup` (`src/lib/attemptSummary.ts`) — the same accuracy-by-level/difficulty
-  grouping `AdminStudentDetail` computes for the teacher's "Where to improve", just framed warmly
-  (encouraging copy instead of a bluntly-flagged weak group) per the "feedback is always
-  positive" rule in "UI/UX". Rendered with Recharts (see "Stack"). **This tab doesn't exist for
-  guests** — `TabBar`'s `showStats` prop is `!isGuest`, so it's never rendered rather than shown
-  with an empty/locked state, since there's genuinely nothing to show without a persisted
-  history.
-- Switching tabs mid-exercise just abandons that one in-progress exercise silently, no
-  confirmation dialog — any point already earned this round is already synced server-side
-  per-attempt, so nothing real is lost.
+See `.claude/rules/student-tabs.md` (loads only when working in `src/tabs/`, `TabBar`, the
+vocabulary data, or `api/my-attempts.ts`) — the three-tab architecture, Vocabulary's
+from-scratch mini-flow, and My Stats' Recharts view.
 
 ## Security
 
@@ -356,50 +222,23 @@ phase: they hold once the teacher backoffice is added in phase 2.
   Vercel project's environment variables (deploy) — never hardcoded in code or committed.
   `.gitignore` explicitly ignores `.env` and `.env.*` (not just `*.local`), so an `.env` with the
   real connection string can never end up committed by mistake.
-- **Students now have real authentication** (see "Student auth") — `POST /api/session`,
-  `GET /api/institutes`, `GET /api/teachers` and `POST /api/student-onboarding` all require
-  `requireStudent` and act on the caller's own row, never a client-supplied id.
-  `POST /api/attempts` and `GET /api/progress` are the one remaining deliberate scope cut: they
-  still trust whatever `studentId` is passed, unauthenticated, same as before accounts existed.
-  This is a smaller accepted risk than it used to be (a `studentId` alone no longer grants
-  account access, just attempt/point writes for that id) but it's still real — don't lower the
-  validations below on the assumption auth already covers it. The teacher has real auth too (see
-  "Teacher auth"); `/api/students`, `/api/student-attempts` and `POST`/`PUT`/`DELETE
-/api/exercises` are protected with `requireTeacher`, the first two also scoped to the
-  requesting teacher's own students.
+- **Students now have real authentication** (see `.claude/rules/student-auth.md`) —
+  `POST /api/session`, `GET /api/institutes`, `GET /api/teachers` and
+  `POST /api/student-onboarding` all require `requireStudent` and act on the caller's own row,
+  never a client-supplied id. `POST /api/attempts` and `GET /api/progress` are the one remaining
+  deliberate scope cut: they still trust whatever `studentId` is passed, unauthenticated, same as
+  before accounts existed. This is a smaller accepted risk than it used to be (a `studentId`
+  alone no longer grants account access, just attempt/point writes for that id) but it's still
+  real — don't lower the validations below on the assumption auth already covers it. The teacher
+  has real auth too (see `.claude/rules/teacher-auth.md`); `/api/students`,
+  `/api/student-attempts` and `POST`/`PUT`/`DELETE /api/exercises` are protected with
+  `requireTeacher`, the first two also scoped to the requesting teacher's own students.
 
 ## Exercises
 
-Exercises live in Neon's `exercises` table (see `api/CLAUDE.md`), not in JSON — the phase-1 JSON
-files (`src/data/exercises/*.json`) were migrated once and deleted. Anything that needs the
-full catalog requests `GET /api/exercises` (`fetchExercises` in `src/lib/api.ts` for the
-student, the same fetch reused in `AdminExercises`) and filters in memory — the filtering
-pattern didn't change, only the data source. Each exercise is typed in `src/types/exercise.ts`
-as a discriminated union on `type`: `"multiple-choice" | "fill-blank" | "matching" |
-"word-order"`, with an optional `hint?: string` field in the database (not shown on the
-student's screen yet). Each type has its own component in `src/components/exercises/`, all
-sharing the `{ exercise, onComplete(correct: boolean), disabled? }` interface.
-
-`Exercise.tsx` requests the catalog once when entering the step, builds the round by filtering
-on the chosen level/difficulty, shuffles with `shuffleArray` (`src/lib/shuffle.ts`) and keeps
-the first `ROUND_SIZE` (5). If fewer than 5 are available for that combination, the round is
-shorter — exercises aren't repeated to fill the quota.
-
-**Creating/editing exercises**: only from `/admin/exercises` (`ExerciseForm`, reused for
-create/edit/duplicate via a `mode`/`initialValue` prop pair), never by editing the database by
-hand except to fix broken data. Teachers can edit or delete an existing exercise, or duplicate
-one (opens the form pre-filled, in create-mode — nothing is saved until "Save" is pressed), via
-`requireTeacher`-protected `PUT`/`DELETE /api/exercises?id=`. For `word-order`, the teacher
-authors the `words` field directly as an ordered list (add/remove, like `matching`'s `pairs`);
-`answer` (used for correctness-checking) is derived server-side as `words.join(" ")` — the
-client never sends `answer` for `word-order`. `WordOrder.tsx` still reshuffles `exercise.words`
-with `shuffleArray` on every render for display, unrelated to authoring order.
-
-If the answer is wrong, `Exercise.tsx` offers "Try again" in addition to "Next": retrying
-remounts the exercise component (changing its `key` to `${exercise.id}-${attempt}`) so it
-resets to its initial state, instead of giving every component its own reset function. The
-point is awarded only once per exercise, on the first attempt (correct or not) — retrying
-doesn't award points again.
+See `.claude/rules/exercises.md` (loads only when working in `src/components/exercises/`,
+`src/steps/Exercise/`, `ExerciseForm`, or `api/exercises.ts`) — the exercise type union, round
+building/shuffling, and teacher authoring flow.
 
 ## UI/UX
 
@@ -439,13 +278,8 @@ student.
 
 ## Header and color themes
 
-There's a fixed `Header` above every signed-in student screen (not `StudentAuth`) with a
-dropdown for the student to pick between **5 different color palettes** (same layout and
-components, only the color set changes). The 5 palettes live as `AppTheme` objects in
-`src/styles/themes/`, sharing the same shape `src/styles/theme.ts` defines. The chosen palette
-is saved in `localStorage` and applied by wrapping the app in styled-components'
-`ThemeProvider` with the active theme (handled from `src/state/ThemeContext.tsx`, separate from
-`StudentContext` because it has nothing to do with the student's session).
+See `.claude/rules/header-themes.md` (loads only when working in `Header`, `ThemeContext.tsx`,
+or `src/styles/themes/`) — the 5 color palettes and how the active one is picked and persisted.
 
 ## PWA
 
@@ -480,7 +314,7 @@ useful in CI).
   teacher Clerk app's `VITE_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`,
   `RESEND_API_KEY` and the student Clerk app's `VITE_CLERK_STUDENT_PUBLISHABLE_KEY`,
   `CLERK_STUDENT_SECRET_KEY` (all also registered on the Vercel project, not just in
-  `.env.local` — see "Teacher auth"/"Student auth").
+  `.env.local` — see `.claude/rules/teacher-auth.md`/`.claude/rules/student-auth.md`).
 
 ## Out of scope for now
 
@@ -488,8 +322,9 @@ Multiple teacher accounts with different roles, manual point editing, exporting 
 the `hint` on the student's screen (the data is already stored, the student-side UI is
 missing), exercises scoped per institute/teacher (the exercise bank stays global on purpose), a
 student account-settings screen to add an email or change a username without logging out (see
-"Student auth"), `requireStudent`-gating `POST /api/attempts`/`GET /api/progress` (see
-"Security"). Also, from "Student tabs": a clickable-hotspot image mechanic for Vocabulary (tap a
-spot on a scene to reveal a word — needs its own authoring story for hotspot coordinates first)
-and a teacher-authored Vocabulary admin UI (content is hand-authored in `src/data/vocabulary.ts`
-for now, the same bootstrap path exercises used before Neon).
+`.claude/rules/student-auth.md`), `requireStudent`-gating `POST /api/attempts`/`GET
+/api/progress` (see "Security" above). Also, from `.claude/rules/student-tabs.md`: a
+clickable-hotspot image mechanic for Vocabulary (tap a spot on a scene to reveal a word — needs
+its own authoring story for hotspot coordinates first) and a teacher-authored Vocabulary admin UI
+(content is hand-authored in `src/data/vocabulary.ts` for now, the same bootstrap path exercises
+used before Neon).
