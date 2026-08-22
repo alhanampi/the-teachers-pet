@@ -18,7 +18,11 @@ import {
 
 type PendingNav = "back" | "home" | null;
 
-export function Header() {
+interface Props {
+  quizTabActive: boolean;
+}
+
+export function Header({ quizTabActive }: Props) {
   const { step, name, points, goBack, signOut } = useStudent();
   const { themeId, setThemeId } = useAppTheme();
   const [pendingNav, setPendingNav] = useState<PendingNav>(null);
@@ -27,7 +31,7 @@ export function Header() {
     setThemeId(event.target.value);
   };
 
-  const canGoBack = step === "difficulty" || step === "exercise";
+  const canGoBack = quizTabActive && (step === "difficulty" || step === "exercise");
 
   const handleBack = () => {
     if (step === "exercise") {

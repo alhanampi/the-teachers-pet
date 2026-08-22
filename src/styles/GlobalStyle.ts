@@ -23,6 +23,7 @@ export const GlobalStyle = createGlobalStyle`
     color: ${({ theme }) => theme.colors.text};
     font-family: ${({ theme }) => theme.fonts.body};
     padding-top: ${({ theme }) => theme.layout.headerHeight};
+    padding-bottom: ${({ theme }) => theme.layout.tabBarHeight};
     overscroll-behavior: none;
   }
 

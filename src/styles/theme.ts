@@ -39,6 +39,7 @@ export const baseTheme = {
   },
   layout: {
     headerHeight: "60px",
+    tabBarHeight: "64px",
   },
   breakpoints,
 } as const;

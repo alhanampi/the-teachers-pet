@@ -1,4 +1,5 @@
 import type { Institute, Teacher } from "../types/institute";
+import type { AttemptRecord } from "../types/admin";
 
 declare global {
   interface Window {
@@ -58,4 +59,8 @@ export function chooseTeacher(teacherId: string): Promise<{ teacherId: string | 
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ teacherId }),
   }).then((res) => parseOrThrow<{ teacherId: string | null }>(res));
+}
+
+export function fetchMyAttempts(): Promise<AttemptRecord[]> {
+  return authorizedFetch("/api/my-attempts").then((res) => parseOrThrow<AttemptRecord[]>(res));
 }
