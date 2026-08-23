@@ -20,7 +20,7 @@ export function MultipleChoice({ exercise, onComplete, disabled }: Props) {
 
   return (
     <div>
-      <Prompt>{exercise.prompt}</Prompt>
+      <Prompt hint={exercise.hint}>{exercise.prompt}</Prompt>
       <Options>
         {exercise.options.map((option) => {
           let state: OptionState = "neutral";

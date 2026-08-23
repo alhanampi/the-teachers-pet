@@ -44,7 +44,7 @@ export function Listening({ exercise, onComplete, disabled }: Props) {
 
   return (
     <div>
-      <Prompt>{exercise.prompt}</Prompt>
+      <Prompt hint={exercise.hint}>{exercise.prompt}</Prompt>
       <PlayWrapper>
         <PlayButton type="button" onClick={handlePlay} disabled={disabled || isDone || !current}>
           🔊 Play

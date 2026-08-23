@@ -5,14 +5,16 @@ import { Arrow, Body, Content, Title, Trigger } from "./HelpTooltip.styles";
 interface Props {
   title: string;
   children: ReactNode;
+  icon?: string;
+  ariaLabel?: string;
 }
 
-export function HelpTooltip({ title, children }: Props) {
+export function HelpTooltip({ title, children, icon = "?", ariaLabel = "Help" }: Props) {
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <Trigger type="button" aria-label="Help">
-          ?
+        <Trigger type="button" aria-label={ariaLabel}>
+          {icon}
         </Trigger>
       </Popover.Trigger>
       <Popover.Portal>

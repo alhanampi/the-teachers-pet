@@ -97,7 +97,7 @@ export function WordOrder({ exercise, onComplete, disabled }: Props) {
 
   return (
     <div>
-      <Prompt>{exercise.prompt}</Prompt>
+      <Prompt hint={exercise.hint}>{exercise.prompt}</Prompt>
       <Row>
         {chosen.length === 0 && !answered && (
           <Placeholder>👉 Tap words below to build your answer</Placeholder>
