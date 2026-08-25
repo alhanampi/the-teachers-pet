@@ -3,8 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { fetchStudentAttempts, fetchStudents } from "../../lib/adminApi";
 import { usePolling } from "../../lib/usePolling";
 import { summarizeByGroup } from "../../lib/attemptSummary";
+import { exportStudentWorkbook } from "../../lib/exportWorkbook";
 import type { AttemptRecord, Student } from "../../types/admin";
 import { Subtitle, Title } from "../../components/ui/Screen";
+import { ExportButton } from "../../components/admin/ExportButton";
 import {
   AttemptList,
   AttemptMeta,
@@ -12,6 +14,7 @@ import {
   AttemptRow,
   BackButton,
   ErrorMessage,
+  HeaderRow,
   SectionTitle,
   SummaryList,
   SummaryRow,
@@ -51,7 +54,16 @@ export function AdminStudentDetail() {
       <BackButton type="button" onClick={() => navigate("/admin/dashboard")}>
         ← Back to students
       </BackButton>
-      <Title>{student?.name ?? "Student"}</Title>
+      <HeaderRow>
+        <Title>{student?.name ?? "Student"}</Title>
+        {student && attempts && (
+          <ExportButton
+            label="Export"
+            onExport={() => exportStudentWorkbook(student, attempts)}
+            onError={setError}
+          />
+        )}
+      </HeaderRow>
       {student && <Subtitle>{student.points} points</Subtitle>}
       {error && <ErrorMessage>{error}</ErrorMessage>}
 

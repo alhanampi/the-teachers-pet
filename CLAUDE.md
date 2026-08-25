@@ -57,7 +57,22 @@ email/password); there's no allowlist, but every signup sends a notification ema
   **never** connects directly to the database — everything goes through `/api` using
   `@neondatabase/serverless`. Exercises also live in Neon (`exercises` table), not in JSON —
   see `.claude/rules/exercises.md`.
+- **Environments are separated at the database level.** The Vercel project has its own Neon
+  branch per purpose: Production's `DATABASE_URL` points at the real `main` branch (project
+  `sparkling-math-42029826`); Development and Preview both point at a separate `development`
+  branch instead — so `vercel dev`, `.env.local`, and preview deployments can never write real
+  student/teacher data. `scripts/seed-dev-teacher.mjs` seeds a "Dev Testing" institute + a
+  teacher there for exactly this kind of local testing. Clerk, by contrast, is **not** yet
+  separated the same way — both Clerk applications (teacher and student) still run on their
+  Development instance (`*.clerk.accounts.dev`) even on the deployed production site; activating
+  real Production Clerk instances is a manual dashboard step, tracked separately, not done yet.
 - `vercel dev` (devDependency) to run frontend + `/api` together locally.
+- `exceljs` builds the teacher's .xlsx progress export (`src/lib/exportWorkbook.ts`) — always
+  `import()`ed dynamically inside the export click-handler, never a static top-level import, so
+  it lands in its own on-demand chunk instead of inflating the main bundle.
+- Vitest for unit tests, config at `vitest.config.ts` (kept separate from `vite.config.ts` to
+  avoid coupling `vite-plugin-pwa`'s config typing to Vitest's). No React Testing Library yet —
+  every test today covers a plain function; add it whenever the first component test is written.
 
 ## Code conventions
 
@@ -77,6 +92,10 @@ email/password); there's no allowlist, but every signup sends a notification ema
   colors/spacing outside the theme.
 - Don't add abstractions, flags, or error handling for cases that can't happen within this
   scope. Don't design for hypothetical future requirements.
+- Unit tests (Vitest) are colocated `*.test.ts` next to the file they cover — no separate
+  `__tests__/` directory. Test files always `import { describe, it, expect } from "vitest"`
+  explicitly rather than relying on injected globals, so no ambient `vitest/globals` types or
+  eslint config changes are needed for them to typecheck/lint like any other file.
 
 ## Folder structure
 
@@ -124,6 +143,8 @@ src/
       TeacherClerkProvider/ mounts the teacher Clerk application, wraps /auth + /admin/* routes
       AdminLayout/       nav (Students/Exercises) + logout, wraps the /admin/* screens
       ExerciseForm/       create/edit/duplicate an exercise, fields depend on `type`
+      ExportButton/        Button + "Exporting…" state, used by the .xlsx export triggers in
+                          AdminStudentDetail/AdminDashboard
     ui/                  Button, Card, Select, Input, Modal, FloatingButton, HelpTooltip, etc.
   state/
     StudentContext.tsx  signed-in student's step/level/difficulty/points — identity comes from
@@ -139,6 +160,10 @@ src/
     attemptSummary.ts     summarizeByGroup(attempts) — accuracy by level+difficulty, weakest
                           first; shared by AdminStudentDetail ("Where to improve") and Stats
                           ("My Stats"), same data, two different tones
+    exportWorkbook.ts      builds + downloads .xlsx progress reports (exceljs, dynamically
+                          imported so it never lands in the main bundle) for one student or all
+                          of a teacher's students; reuses summarizeByGroup for the per-level
+                          breakdown sheets
   types/
     exercise.ts
     admin.ts              Student, AttemptRecord
@@ -301,9 +326,9 @@ Formatting is handled by **Prettier** (`.prettierrc.json`), not manual judgment 
 
 - `npm run dev` for frontend only; `vercel dev` to also test `/api` against Neon (needed to
   test `/`, `/auth` and `/admin/*`, all of which depend on `/api`). `/verify` (project skill)
-  runs the three checks below in order.
-- `npm run format:check`, `npx tsc --noEmit` and `npm run lint` before considering a change
-  done.
+  runs the four checks below in order.
+- `npm run format:check`, `npx tsc --noEmit`, `npm run lint` and `npm test` before considering a
+  change done.
 - Manual student verification: sign up (new username/password) at `/`, approve the consent
   interstitial, pick an institute/teacher, then go through level → difficulty → exercises (all 4
   types) → summary, confirming in Neon that a `students` row exists with `clerk_user_id` and
@@ -316,8 +341,12 @@ Formatting is handled by **Prettier** (`.prettierrc.json`), not manual judgment 
   opens the hint text and is absent on exercises with no `hint` set; in `/admin/dashboard`,
   confirm only students who
   picked this teacher are listed, open one and confirm the history and the "where to improve"
-  summary match the attempts made.
-- Requires `DATABASE_URL` in `.env.local` (Neon connection string, not committed), plus the
+  summary match the attempts made; click "Export" on that student and "Export all" on
+  `/admin/dashboard`, open both downloaded `.xlsx` files and confirm the totals/percentages match
+  what's on screen, that any duplicate-named legacy students each get their own row/sheet (never
+  merged), and that header rows are bold and frozen.
+- Requires `DATABASE_URL` in `.env.local` (Neon connection string for the `development` branch,
+  not committed — never the production branch's), plus the
   teacher Clerk app's `VITE_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`, `CLERK_WEBHOOK_SECRET`,
   `RESEND_API_KEY` and the student Clerk app's `VITE_CLERK_STUDENT_PUBLISHABLE_KEY`,
   `CLERK_STUDENT_SECRET_KEY` (all also registered on the Vercel project, not just in
@@ -329,11 +358,12 @@ See `ROADMAP.md` at the repo root for proposed future improvements (student moti
 tooling, technical robustness), each tagged with a version number. Check it before proposing a
 big new feature — it may already be thought through there, with its scope already narrowed down.
 Shipped items are removed from `ROADMAP.md` as they land (v1.1, showing the exercise `hint` to
-the student, was the first).
+the student, and v1.2, the teacher's .xlsx progress export, are the first two — note v1.2 shipped
+as `.xlsx` rather than the CSV originally sketched there).
 
 ## Out of scope for now
 
-Multiple teacher accounts with different roles, manual point editing, exporting reports,
+Multiple teacher accounts with different roles, manual point editing,
 exercises scoped per institute/teacher (the exercise bank stays global on purpose), a student
 account-settings screen to add an email or change a username without logging out (see
 `.claude/rules/student-auth.md`), `requireStudent`-gating `POST /api/attempts`/`GET

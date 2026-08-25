@@ -30,6 +30,17 @@ async function authorizedFetch(url: string, init?: RequestInit): Promise<Respons
   });
 }
 
+export interface TeacherSession {
+  teacherId: string;
+  email: string;
+}
+
+export async function fetchTeacherSession(): Promise<TeacherSession | null> {
+  const res = await authorizedFetch("/api/teacher-session");
+  if (res.status === 403) return null;
+  return parseOrThrow<TeacherSession>(res);
+}
+
 export function fetchStudents(): Promise<Student[]> {
   return authorizedFetch("/api/students").then((res) => parseOrThrow<Student[]>(res));
 }
