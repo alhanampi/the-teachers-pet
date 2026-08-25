@@ -25,6 +25,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  // Se junta acá (en vez de tener su propio api/teacher-session.ts) solo para no superar el
+  // límite de 12 Serverless Functions por deploy del plan Hobby — la verificación de auth+
+  // vínculo es la misma, `RequireAuth` solo necesita la identidad, sin la query de la lista.
+  if (req.query.whoami === "1") {
+    res.status(200).json({ teacherId: teacher.teacherId, email: teacher.email });
+    return;
+  }
+
   try {
     await ensureSchema();
 

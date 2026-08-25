@@ -12,10 +12,6 @@ _db.ts              Neon connection helper (CREATE TABLE/ALTER TABLE IF NOT EXIS
 _validate.ts        shared validators (level, difficulty, exercise type, uuid, lengths...)
 _auth.ts             requireTeacher(req)/requireStudent(req): verify a Clerk session token
                      (@clerk/backend) — one function per Clerk application
-teacher-session.ts    GET (teacher) — resolves the caller's own linkage status; 403 if the
-                     signed-in Clerk account has no `teachers` row yet. Used by `RequireAuth`
-                     to keep an unlinked account off the dashboard shell, not by any screen
-                     for actual data.
 clerk-webhook.ts     POST — Clerk `user.created` webhook (teacher app), emails a signup
                      notification (Resend)
 session.ts          POST (student) — creates/retrieves the signed-in student's row
@@ -28,7 +24,12 @@ my-attempts.ts       GET (student) — the signed-in student's own attempt histo
                      Stats" (never a guest — that tab doesn't exist in guest mode)
 exercises.ts         GET (public) / POST (teacher) — exercise catalog, global (not
                      scoped per institute/teacher)
-students.ts          GET (teacher) — list of the requesting teacher's own students
+students.ts          GET (teacher) — list of the requesting teacher's own students; GET
+                     ?whoami=1 (teacher) — resolves the caller's own linkage status instead
+                     (403 if the signed-in Clerk account has no `teachers` row yet), used by
+                     `RequireAuth` to keep an unlinked account off the dashboard shell — folded
+                     in here rather than its own file to stay under Vercel Hobby's 12-Serverless-
+                     Functions-per-deployment cap
 student-attempts.ts GET (teacher) ?studentId= — a student's attempt history (must belong to
                      the requesting teacher)
 ```
@@ -121,14 +122,13 @@ prompt, hint?, options?, answer?, pairs?, words? }` depending on `type` (word-or
 - `DELETE /api/exercises?id=` — protected (`requireTeacher`). Validates `id` as a UUID; 404 if it
   doesn't exist. Deletes the row — no cascade concerns, since `attempts.exercise_id` has no FK
   constraint and `student-attempts.ts`'s `LEFT JOIN` already tolerates a missing exercise.
-- `GET /api/teacher-session` — protected (`requireTeacher`). 401 if not signed in, 403
-  `{"error": "This account isn't linked to a teacher profile"}` if `teacherId` is null, otherwise
-  `{ teacherId, email }`. `RequireAuth` calls this before rendering `/admin/*`, so a
-  Clerk-authenticated-but-unlinked account gets a clear in-app message instead of reaching the
-  dashboard shell and hitting 403s from every other endpoint.
 - `GET /api/students` — protected (`requireTeacher`), scoped to `teacher.teacherId` (403 if the
   calling Clerk account has no `teachers` row). Returns `{ id, name, points, createdAt }[]` — only
   the requesting teacher's own students.
+- `GET /api/students?whoami=1` — same auth/403 as above, but returns `{ teacherId, email }`
+  instead of the student list, skipping the query entirely. `RequireAuth` calls this before
+  rendering `/admin/*`, so a Clerk-authenticated-but-unlinked account gets a clear in-app message
+  instead of reaching the dashboard shell and hitting 403s from every other endpoint.
 - `GET /api/student-attempts?studentId=` — protected (`requireTeacher`), same scoping: 404s if
   `studentId` doesn't belong to the requesting teacher. Returns a student's history
   (`AttemptRecord[]`, with `prompt`/`type` resolved via a `LEFT JOIN` to `exercises`).
