@@ -56,7 +56,12 @@ email/password); there's no allowlist, but every signup sends a notification ema
 - Persistence: Neon (Postgres) via Vercel serverless functions in `/api/*.ts`. The browser
   **never** connects directly to the database — everything goes through `/api` using
   `@neondatabase/serverless`. Exercises also live in Neon (`exercises` table), not in JSON —
-  see `.claude/rules/exercises.md`.
+  see `.claude/rules/exercises.md`. **The project is on Vercel's Hobby plan, capped at 12
+  Serverless Functions per deployment** — every top-level `api/*.ts` file (anything not prefixed
+  `_` and not a `*.test.ts`) counts as one, `_db.ts`/`_validate.ts`/`_auth.ts` don't. Before
+  adding a new `api/*.ts` file, check the current count (`ls api/*.ts` minus `_*`/`*.test.ts`
+  files) — at 12 already, fold the new endpoint into an existing file instead (e.g. a query
+  param like `students.ts`'s `?whoami=1`) rather than deploy-breaking the build.
 - **Environments are separated at the database level.** The Vercel project has its own Neon
   branch per purpose: Production's `DATABASE_URL` points at the real `main` branch (project
   `sparkling-math-42029826`); Development and Preview both point at a separate `development`

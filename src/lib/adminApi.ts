@@ -36,7 +36,7 @@ export interface TeacherSession {
 }
 
 export async function fetchTeacherSession(): Promise<TeacherSession | null> {
-  const res = await authorizedFetch("/api/teacher-session");
+  const res = await authorizedFetch("/api/students?whoami=1");
   if (res.status === 403) return null;
   return parseOrThrow<TeacherSession>(res);
 }

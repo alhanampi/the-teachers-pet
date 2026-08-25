@@ -36,12 +36,14 @@ teacherId`, `null` if this Clerk account has no `teachers` row yet) — this is 
   hand (see `scripts/link-legacy-students-to-miss-nati.mjs` / `scripts/seed-dev-teacher.mjs` for
   the pattern), which is exactly why the check below exists.
 - **A signed-in-but-unlinked Clerk account never reaches the dashboard shell.** `RequireAuth`
-  (`src/components/admin/RequireAuth`) calls `GET /api/teacher-session` (via
+  (`src/components/admin/RequireAuth`) calls `GET /api/students?whoami=1` (via
   `useTeacherSession`, `src/lib/useTeacherSession.ts`) before rendering `<Outlet/>` — a 403
   (`teacherId` is null) renders an in-place "not linked" message with a sign-out button instead
   of the dashboard, rather than letting the account through to hit 403s from every other
   endpoint. This renders in place rather than redirecting to `/auth`, since `Auth.tsx`'s own
-  `isSignedIn` check would immediately bounce back to `/admin/dashboard`, looping.
+  `isSignedIn` check would immediately bounce back to `/admin/dashboard`, looping. `whoami=1` is
+  folded into `students.ts` rather than its own file to stay under Vercel Hobby's 12-Serverless-
+  Functions-per-deployment cap (see `api/CLAUDE.md`).
 - `api/clerk-webhook.ts` receives Clerk's `user.created` webhook (signature verified with
   `svix`, `CLERK_WEBHOOK_SECRET`), then emails a notification via Resend (`RESEND_API_KEY`) to
   `NOTIFY_TEACHER_SIGNUP_EMAIL` (defaults to `alhanampi@gmail.com`) — the endpoint must be
