@@ -44,9 +44,6 @@ mejora sin ambigüedad ("hagamos v1.3").
 
 ## Herramientas del docente
 
-- **v1.2 — CSV export de progreso.** Desde `AdminStudentDetail`/`AdminDashboard`, 100%
-  client-side a partir de los `AttemptRecord[]` que ya se fetchean — sin endpoint nuevo. Cierra
-  un ítem que hoy está en "Out of scope for now" en `CLAUDE.md`.
 - **v1.9 — Asignar ejercicios puntuales a un alumno.** Tabla nueva `assignments` (`student_id,
 exercise_id, created_at`), con una sección "Recomendado para vos" antes del selector de
   nivel/dificultad en Quizzes.
@@ -65,13 +62,10 @@ exercise_id, created_at`), con una sección "Recomendado para vos" antes del sel
 
 ## Solidez técnica
 
-- **v1.3 — Tests unitarios.** Vitest + React Testing Library, arrancando por `summarizeByGroup`
-  (`src/lib/attemptSummary.ts`), `shuffleArray` (`src/lib/shuffle.ts`) y los validadores de
-  `api/_validate.ts` — funciones puras, sin Clerk/Neon/red de por medio, el punto de partida de
-  menor riesgo. Hoy no hay ningún test en el repo.
-- **v1.4 — CI básica.** GitHub Actions corriendo `format:check` + `tsc --noEmit` + `lint` (+ los
-  tests de v1.3 en cuanto existan) en cada push/PR. Hoy no existe `.github/workflows/` — la
-  única red de seguridad es correr `/verify` a mano antes de cada `/ship`.
+- **v1.4 — CI básica.** GitHub Actions corriendo `format:check` + `tsc --noEmit` + `lint` + `test`
+  en cada push/PR (los cuatro ya existen como comandos, ver `/verify`). Hoy no existe
+  `.github/workflows/` — la única red de seguridad es correr `/verify` a mano antes de cada
+  `/ship`.
 - **v1.5 — Cerrar el riesgo de seguridad aceptado.** Agregar `requireStudent` a
   `POST /api/attempts` y `GET /api/progress` (ver "Security" en `CLAUDE.md`) — ahora que las
   cuentas de alumno están difundidas, el último tramo sin autenticar que sigue confiando en un
@@ -79,6 +73,16 @@ exercise_id, created_at`), con una sección "Recomendado para vos" antes del sel
 - **v1.12 — E2E smoke tests con Playwright.** Formalizar en un `e2e/` real lo que hoy son scripts
   sueltos de debug (se escriben y se borran sesión a sesión): alta de alumno → onboarding → un
   ejercicio → resumen; login de docente → dashboard → crear ejercicio.
+- **v1.13 — Activar instancias de Production reales en Clerk.** La separación de entornos en
+  Neon ya está hecha (branch `development` propio para Development/Preview, `main` intacto para
+  Production — ver "Stack" en `CLAUDE.md`), pero **ambas** apps de Clerk (docente y alumno) siguen
+  corriendo en su instancia de Development incluso en el sitio ya desplegado
+  (`*.clerk.accounts.dev`, banner "Development mode" visible a docentes reales hoy). Activar
+  Production en el dashboard de Clerk para las dos apps, recrear el claim de sesión custom en
+  cada una (`email`/`username` respectivamente — no se copia solo), reregistrar el webhook
+  `user.created` con el nuevo secret, y recablear las env vars de **Production únicamente** en
+  Vercel. Requiere que las cuentas reales existentes (ej. Miss Nati) se registren de nuevo, ya
+  que no hay migración de usuarios entre instancias de Clerk.
 - **v2.4 — Monitoreo de errores** (ej. Sentry) en `/api` y frontend. Hoy un error de
   configuración externo (como el claim de Clerk que faltaba, resuelto en una sesión reciente)
   solo se nota cuando un usuario real lo pisa.

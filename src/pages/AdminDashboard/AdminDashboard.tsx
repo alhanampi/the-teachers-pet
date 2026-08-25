@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchStudents } from "../../lib/adminApi";
+import { fetchStudentAttempts, fetchStudents } from "../../lib/adminApi";
 import { usePolling } from "../../lib/usePolling";
-import type { Student } from "../../types/admin";
+import { exportAllStudentsWorkbook } from "../../lib/exportWorkbook";
+import type { AttemptRecord, Student } from "../../types/admin";
 import { Subtitle, Title } from "../../components/ui/Screen";
+import { ExportButton } from "../../components/admin/ExportButton";
 import {
   ErrorMessage,
   Group,
   GroupLabel,
+  HeaderRow,
   List,
   ListItem,
   Meta,
@@ -35,6 +38,19 @@ export function AdminDashboard() {
 
   usePolling(loadStudents, POLL_INTERVAL_MS);
 
+  const handleExportAll = async (): Promise<void> => {
+    if (!students || students.length === 0) return;
+    const attemptsByStudentId = new Map(
+      await Promise.all(
+        students.map(async (student): Promise<[string, AttemptRecord[]]> => [
+          student.id,
+          await fetchStudentAttempts(student.id),
+        ]),
+      ),
+    );
+    await exportAllStudentsWorkbook(students, attemptsByStudentId);
+  };
+
   const groups = useMemo(() => {
     if (!students) return [];
     const byName = new Map<string, Student[]>();
@@ -47,7 +63,12 @@ export function AdminDashboard() {
 
   return (
     <div>
-      <Title>Students</Title>
+      <HeaderRow>
+        <Title>Students</Title>
+        {students && students.length > 0 && (
+          <ExportButton label="Export all" onExport={handleExportAll} onError={setError} />
+        )}
+      </HeaderRow>
       {error && <ErrorMessage>{error}</ErrorMessage>}
       {!students && !error && <Subtitle>Loading...</Subtitle>}
       {students && students.length === 0 && <Subtitle>No students yet.</Subtitle>}

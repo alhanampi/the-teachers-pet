@@ -31,7 +31,17 @@ everything else (architecture, conventions, "Security", "Student auth" in
   call per request. `requireTeacher` also resolves the caller's own `teachers.id` row (`teacher.
 teacherId`, `null` if this Clerk account has no `teachers` row yet) — this is what
   `students.ts`/`student-attempts.ts` use to scope a teacher to their own students, so `_auth.ts`
-  is DB-aware now, not pure token verification.
+  is DB-aware now, not pure token verification. Linking a Clerk account to a `teachers` row isn't
+  self-service — there's no in-app flow for it — it's a one-off `INSERT INTO teachers` run by
+  hand (see `scripts/link-legacy-students-to-miss-nati.mjs` / `scripts/seed-dev-teacher.mjs` for
+  the pattern), which is exactly why the check below exists.
+- **A signed-in-but-unlinked Clerk account never reaches the dashboard shell.** `RequireAuth`
+  (`src/components/admin/RequireAuth`) calls `GET /api/teacher-session` (via
+  `useTeacherSession`, `src/lib/useTeacherSession.ts`) before rendering `<Outlet/>` — a 403
+  (`teacherId` is null) renders an in-place "not linked" message with a sign-out button instead
+  of the dashboard, rather than letting the account through to hit 403s from every other
+  endpoint. This renders in place rather than redirecting to `/auth`, since `Auth.tsx`'s own
+  `isSignedIn` check would immediately bounce back to `/admin/dashboard`, looping.
 - `api/clerk-webhook.ts` receives Clerk's `user.created` webhook (signature verified with
   `svix`, `CLERK_WEBHOOK_SECRET`), then emails a notification via Resend (`RESEND_API_KEY`) to
   `NOTIFY_TEACHER_SIGNUP_EMAIL` (defaults to `alhanampi@gmail.com`) — the endpoint must be

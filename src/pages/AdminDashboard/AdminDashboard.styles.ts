@@ -1,6 +1,13 @@
 import styled from "styled-components";
 import { pressable } from "../../styles/interactive";
 
+export const HeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${({ theme }) => theme.spacing.sm};
+`;
+
 export const List = styled.ul`
   display: flex;
   flex-direction: column;

@@ -8,6 +8,12 @@ export default defineConfig({
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "icons/apple.svg"],
+      workbox: {
+        // exceljs (export .xlsx solo del docente, importado dinámicamente) si no se excluye
+        // se precachea igual en el dispositivo de cada alumno al instalar la PWA — mejor
+        // que se baje bajo demanda.
+        globIgnores: ["**/exceljs*.js"],
+      },
       manifest: {
         name: "Teacher's Pet",
         short_name: "Teacher's Pet",

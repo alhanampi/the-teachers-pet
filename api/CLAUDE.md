@@ -12,6 +12,10 @@ _db.ts              Neon connection helper (CREATE TABLE/ALTER TABLE IF NOT EXIS
 _validate.ts        shared validators (level, difficulty, exercise type, uuid, lengths...)
 _auth.ts             requireTeacher(req)/requireStudent(req): verify a Clerk session token
                      (@clerk/backend) — one function per Clerk application
+teacher-session.ts    GET (teacher) — resolves the caller's own linkage status; 403 if the
+                     signed-in Clerk account has no `teachers` row yet. Used by `RequireAuth`
+                     to keep an unlinked account off the dashboard shell, not by any screen
+                     for actual data.
 clerk-webhook.ts     POST — Clerk `user.created` webhook (teacher app), emails a signup
                      notification (Resend)
 session.ts          POST (student) — creates/retrieves the signed-in student's row
@@ -117,6 +121,11 @@ prompt, hint?, options?, answer?, pairs?, words? }` depending on `type` (word-or
 - `DELETE /api/exercises?id=` — protected (`requireTeacher`). Validates `id` as a UUID; 404 if it
   doesn't exist. Deletes the row — no cascade concerns, since `attempts.exercise_id` has no FK
   constraint and `student-attempts.ts`'s `LEFT JOIN` already tolerates a missing exercise.
+- `GET /api/teacher-session` — protected (`requireTeacher`). 401 if not signed in, 403
+  `{"error": "This account isn't linked to a teacher profile"}` if `teacherId` is null, otherwise
+  `{ teacherId, email }`. `RequireAuth` calls this before rendering `/admin/*`, so a
+  Clerk-authenticated-but-unlinked account gets a clear in-app message instead of reaching the
+  dashboard shell and hitting 403s from every other endpoint.
 - `GET /api/students` — protected (`requireTeacher`), scoped to `teacher.teacherId` (403 if the
   calling Clerk account has no `teachers` row). Returns `{ id, name, points, createdAt }[]` — only
   the requesting teacher's own students.
